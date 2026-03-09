@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dual AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════ */
+:root {
+  --bg:      #07070f;
+  --bg2:     #0d0d1a;
+  --glass:   rgba(255,255,255,0.04);
+  --glass2:  rgba(255,255,255,0.07);
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.14);
+
+  --c:  #ff7c2a;
+  --c2: #ffaa5e;
+  --g:  #00d4ff;
+  --g2: #00ffb3;
+
+  --txt:   #f2f2ff;
+  --muted: #6b6b90;
+  --dim:   #30304a;
+
+  --font: 'Outfit', sans-serif;
+  --font-msg: 'Outfit', sans-serif;
+  --r: 20px;
+  --rsm: 14px;
+  --rxs: 10px;
+
+  /* bubble colors — overridden by JS */
+  --bubble-you-bg: #2a2a3e;
+  --bubble-c-bg:   rgba(255,124,42,0.12);
+  --bubble-g-bg:   rgba(0,212,255,0.10);
+
+  /* label colors — overridden by JS */
+  --label-you-color: #6b6b90;
+  --label-c-color:   #ff7c2a;
+  --label-g-color:   #00d4ff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%; height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--txt);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── GLOBAL GLOW ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 800px 500px at 5% 0%, rgba(255,124,42,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 95% 100%, rgba(0,212,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(150,0,255,0.04) 0%, transparent 70%);
+}
+
+/* ══════════════════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════════════════ */
+#setup {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.setup-wrap {
+  width: 100%; max-width: 480px;
+  position: relative; z-index: 1;
+}
+
+.setup-header {
+  text-align: center; margin-bottom: 36px;
+}
+
+.setup-logo-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; margin-bottom: 12px;
+}
+
+.logo-orb {
+  width: 56px; height: 56px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--c), var(--g));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; color: #000; letter-spacing: -1px;
+  box-shadow: 0 0 40px rgba(255,124,42,0.4), 0 0 80px rgba(0,212,255,0.2);
+  position: relative;
+}
+.logo-orb::after {
+  content: '';
+  position: absolute; inset: -2px; border-radius: 20px;
+  background: linear-gradient(135deg, var(--c), var(--g));
+  z-index: -1; filter: blur(8px); opacity: 0.5;
+}
+
+.setup-title {
+  font-size: 36px; font-weight: 800; letter-spacing: -1.5px;
+  background: linear-gradient(135deg, var(--c) 0%, #fff 50%, var(--g) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.setup-sub {
+  font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 6px;
+  letter-spacing: 0.3px;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  backdrop-filter: blur(20px);
+  padding: 36px;
+  position: relative; overflow: hidden;
+}
+.glass-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,124,42,0.6), rgba(0,212,255,0.6), transparent);
+}
+
+.field-group { margin-bottom: 20px; }
+
+.field-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.fdot { width: 7px; height: 7px; border-radius: 50%; }
+
+.field-inp {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--rsm); padding: 14px 18px;
+  color: var(--txt); font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.field-inp:focus {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border2);
+}
+.field-inp.fc:focus { box-shadow: 0 0 0 3px rgba(255,124,42,0.15), 0 0 20px rgba(255,124,42,0.08); }
+.field-inp.fg:focus { box-shadow: 0 0 0 3px rgba(0,212,255,0.15), 0 0 20px rgba(0,212,255,0.08); }
+
+.field-hint { font-size: 11px; color: var(--dim); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+
+/* BIG launch button */
+.btn-launch {
+  width: 100%; margin-top: 28px; padding: 18px;
+  background: linear-gradient(135deg, var(--c) 0%, #ff4fa3 50%, var(--g) 100%);
+  background-size: 200% 200%; animation: gradShift 4s ease infinite;
+  border: none; border-radius: var(--rsm);
+  font-family: var(--font); font-size: 16px; font-weight: 800;
+  color: #000; cursor: pointer; letter-spacing: 0.3px;
+  position: relative; overflow: hidden;
+  transition: transform .15s, box-shadow .2s;
+  box-shadow: 0 8px 40px rgba(255,124,42,0.35), 0 0 60px rgba(0,212,255,0.15);
+}
+@keyframes gradShift {
+  0%,100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.btn-launch::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.15), transparent);
+}
+.btn-launch:hover { transform: translateY(-2px); box-shadow: 0 12px 50px rgba(255,124,42,0.45); }
+.btn-launch:active { transform: translateY(0); }
+
+.setup-note { text-align: center; margin-top: 14px; font-size: 11px; color: var(--dim); }
+
+/* ══════════════════════════════════════════════════
+   SETTINGS SIDEBAR
+══════════════════════════════════════════════════ */
+.settings-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: none;
+}
+.settings-overlay.open { display: block; }
+
+.settings-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.3);
+}
+
+.settings-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 340px;
+  background: rgba(13,13,26,0.95);
+  border-left: 1px solid var(--border2);
+  backdrop-filter: blur(30px);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.settings-overlay.open .settings-panel { transform: translateX(0); }
+
+.settings-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--c), var(--g));
+}
+
+.sp-head {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sp-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.sp-close {
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--rxs); width: 36px; height: 36px;
+  color: var(--muted); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.sp-close:hover { color: var(--txt); border-color: var(--border2); }
+
+.sp-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 28px; }
+.sp-body::-webkit-scrollbar { width: 3px; }
+.sp-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sp-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+
+/* Font picker */
+.font-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.font-btn {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--rsm); padding: 12px 14px;
+  cursor: pointer; transition: all .2s; text-align: left;
+  color: var(--muted);
+}
+.font-btn:hover { border-color: var(--border2); color: var(--txt); background: var(--glass2); }
+.font-btn.active {
+  border-color: var(--c); background: rgba(255,124,42,0.1); color: var(--txt);
+  box-shadow: 0 0 16px rgba(255,124,42,0.2);
+}
+.font-btn-name { font-size: 14px; font-weight: 600; line-height: 1; margin-bottom: 3px; }
+.font-btn-sample { font-size: 10px; color: var(--muted); }
+
+/* Font size slider */
+.slider-row { display: flex; align-items: center; gap: 12px; }
+.slider-label { font-size: 11px; color: var(--muted); width: 28px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+input[type=range] {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--c), var(--g));
+  outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 0 10px rgba(255,124,42,0.5);
+  cursor: pointer;
+}
+
+/* Theme toggle big */
+.theme-big {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.theme-opt {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--rsm); padding: 14px;
+  cursor: pointer; transition: all .2s; text-align: center;
+  color: var(--muted); font-size: 13px; font-weight: 600;
+}
+.theme-opt:hover { border-color: var(--border2); color: var(--txt); }
+.theme-opt.active { border-color: var(--g); background: rgba(0,212,255,0.1); color: var(--txt); }
+.theme-opt-icon { font-size: 22px; margin-bottom: 6px; }
+
+/* Bubble style */
+.bubble-opts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.bubble-opt {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--rsm); padding: 12px 8px;
+  cursor: pointer; transition: all .2s; text-align: center;
+  color: var(--muted); font-size: 11px; font-weight: 600;
+}
+.bubble-opt:hover { border-color: var(--border2); color: var(--txt); }
+.bubble-opt.active { border-color: var(--c); background: rgba(255,124,42,0.1); color: var(--txt); }
+.bubble-preview { height: 8px; border-radius: 4px; background: var(--glass2); margin-bottom: 8px; width: 100%; }
+
+/* Context prompt in sidebar */
+.ctx-ta {
+  width: 100%; background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border); border-radius: var(--rsm);
+  padding: 14px; color: var(--txt);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  resize: none; min-height: 150px; outline: none; line-height: 1.8;
+  transition: border-color .2s;
+}
+.ctx-ta:focus { border-color: var(--border2); }
+
+.ctx-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ctx-btn-sm {
+  flex: 1; min-width: 70px; padding: 10px 12px;
+  border-radius: var(--rxs); font-family: var(--font);
+  font-size: 12px; font-weight: 700; cursor: pointer; border: none;
+  transition: opacity .2s; white-space: nowrap;
+}
+.ctx-save { background: linear-gradient(135deg, var(--c), var(--g)); color: #000; }
+.ctx-dl   { background: var(--glass2); color: var(--muted); border: 1px solid var(--border); }
+.ctx-mail { background: var(--glass2); color: var(--muted); border: 1px solid var(--border); }
+.ctx-btn-sm:hover { opacity: .85; }
+
+/* ══════════════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════════════ */
+#app { display: none; flex-direction: column; height: 100vh; height: 100dvh; position: relative; z-index: 1; }
+
+/* ── TOPBAR ── */
+.top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px; height: 60px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(7,7,15,0.8); backdrop-filter: blur(20px);
+  position: relative; z-index: 10;
+}
+
+.top-brand { display: flex; align-items: center; gap: 10px; }
+.top-orb {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--c), var(--g));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: #000;
+  box-shadow: 0 0 16px rgba(255,124,42,0.35);
+}
+.top-name {
+  font-size: 17px; font-weight: 800; letter-spacing: -0.5px;
+  background: linear-gradient(90deg, var(--c), var(--g));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* AI Mode selector — pill style, bigger */
+.mode-pills {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border); border-radius: 14px; padding: 4px;
+  margin-left: 6px;
+}
+.mpill {
+  padding: 7px 18px; border-radius: 10px; border: none;
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all .2s; background: transparent; color: var(--muted);
+  white-space: nowrap;
+}
+.mpill.on-both { background: linear-gradient(135deg, var(--c), var(--g)); color: #000; box-shadow: 0 2px 12px rgba(255,124,42,0.3); }
+.mpill.on-c    { background: var(--c); color: #000; box-shadow: 0 2px 12px rgba(255,124,42,0.35); }
+.mpill.on-g    { background: var(--g); color: #000; box-shadow: 0 2px 12px rgba(0,212,255,0.35); }
+.mpill:not([class*="on"]):hover { color: var(--txt); background: var(--glass2); }
+
+.top-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* Big icon buttons in topbar */
+.top-btn {
+  height: 40px; padding: 0 16px; border-radius: 12px;
+  background: var(--glass2); border: 1px solid var(--border);
+  color: var(--muted); font-family: var(--font);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all .2s; white-space: nowrap;
+}
+.top-btn:hover { border-color: var(--border2); color: var(--txt); }
+.top-btn.new:hover { border-color: var(--g); color: var(--g); box-shadow: 0 0 16px rgba(0,212,255,0.15); }
+.top-btn.settings:hover { border-color: var(--c); color: var(--c); box-shadow: 0 0 16px rgba(255,124,42,0.15); }
+.top-btn.save:hover { border-color: var(--g2); color: var(--g2); }
+
+/* pip dot */
+.ctx-pip2 { width: 7px; height: 7px; border-radius: 50%; background: var(--c); display: none; box-shadow: 0 0 6px var(--c); }
+.ctx-pip2.on { display: inline-block; }
+
+/* ── SYNC BAR ── */
+#syncBar {
+  display: none; padding: 5px 20px; flex-shrink: 0;
+  font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  color: var(--muted); align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(7,7,15,0.7);
+}
+#syncBar.on { display: flex; }
+#sDot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); transition: background .3s; }
+#sDot.syncing { background: var(--c); animation: pulse 1s infinite; }
+#sDot.synced  { background: var(--g2); }
+#sDot.error   { background: #ff4466; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(0.8)} }
+
+/* ── PANELS ── */
+.panels {
+  flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+  overflow: hidden; min-height: 0;
+}
+.panels.solo { grid-template-columns: 1fr; }
+
+.panel { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.panel + .panel { border-left: 1px solid var(--border); }
+.panel.hidden { display: none; }
+
+/* Panel header with gradient left border */
+.panel-hd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px; height: 52px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.015);
+}
+.panel-hd-c { border-left: 3px solid var(--c); }
+.panel-hd-g { border-left: 3px solid var(--g); }
+
+.ph-glow { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.ph-label { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; }
+.ph-model-tag {
+  font-size: 9px; color: var(--dim); font-family: 'JetBrains Mono', monospace;
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 7px; margin-left: 2px;
+}
+.ph-state { margin-left: auto; font-size: 10px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+.ph-state.tc { color: var(--c); animation: pulse 1s infinite; }
+.ph-state.tg { color: var(--g); animation: pulse 1s infinite; }
+
+/* ── MESSAGES ── */
+.msgs {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px; min-height: 0;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.msgs::-webkit-scrollbar { width: 3px; }
+.msgs::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+.empty-st {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  color: var(--dim); pointer-events: none;
+}
+.es-orb { font-size: 42px; opacity: .1; }
+.es-lbl { font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+/* Message bubbles */
+.msg { animation: up .2s ease; }
+@keyframes up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* User bubble */
+.msg-u {
+  font-family: var(--font-msg);
+  font-size: var(--msg-size, 14px);
+  background: var(--bubble-you-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--bubble-radius, var(--rsm));
+  padding: 7px 12px; line-height: 1.6;
+  color: var(--txt);
+}
+.msg-u-label {
+  font-size: 9px; letter-spacing: 2px; font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--label-you-color);
+  margin-right: 8px; text-transform: uppercase;
+}
+
+/* AI bubbles */
+.msg-ai {
+  font-family: var(--font-msg);
+  font-size: var(--msg-size, 14px);
+  border-radius: var(--bubble-radius, var(--rsm));
+  padding: 8px 13px; line-height: 1.7;
+  color: var(--txt);
+}
+.ai-c {
+  background: var(--bubble-c-bg);
+  border: 1px solid rgba(255,124,42,0.15);
+}
+.ai-g {
+  background: var(--bubble-g-bg);
+  border: 1px solid rgba(0,212,255,0.15);
+}
+.ai-lbl {
+  font-size: 9px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 5px;
+}
+.ai-c .ai-lbl { color: var(--label-c-color); }
+.ai-g .ai-lbl { color: var(--label-g-color); }
+
+.msg-err {
+  background: rgba(255,68,102,0.07); border: 1px solid rgba(255,68,102,0.2);
+  border-radius: var(--rsm); padding: 12px 16px;
+  font-size: 12px; color: #ff6688;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Thinking dots */
+.thinking {
+  display: flex; gap: 5px; align-items: center;
+  padding: 16px 18px; border-radius: var(--rsm);
+}
+.th-c { background: rgba(255,124,42,0.06); border: 1px solid rgba(255,124,42,0.12); }
+.th-g { background: rgba(0,212,255,0.06);  border: 1px solid rgba(0,212,255,0.12); }
+.tdot { width: 8px; height: 8px; border-radius: 50%; animation: bounce 1.1s ease-in-out infinite; }
+.th-c .tdot { background: var(--c); }
+.th-g .tdot { background: var(--g); }
+.tdot:nth-child(2){animation-delay:.17s}
+.tdot:nth-child(3){animation-delay:.34s}
+@keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.3} 40%{transform:translateY(-8px);opacity:1} }
+
+/* ── INPUT BAR ── */
+.input-bar {
+  padding: 16px 20px; flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: rgba(7,7,15,0.85); backdrop-filter: blur(20px);
+  display: flex; gap: 12px; align-items: flex-end;
+}
+
+.input-shell {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: 16px; padding: 4px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.input-shell:focus-within {
+  border-color: rgba(255,124,42,0.45);
+  box-shadow: 0 0 0 3px rgba(255,124,42,0.08), 0 0 30px rgba(255,124,42,0.06);
+}
+
+textarea {
+  width: 100%; background: none; border: none; outline: none;
+  color: var(--txt); font-family: var(--font);
+  font-size: 14px; font-weight: 500; resize: none;
+  padding: 12px 14px; max-height: 130px; line-height: 1.55;
+}
+textarea::placeholder { color: var(--muted); }
+
+/* Input row with attach */
+.input-row {
+  display: flex; align-items: flex-end; gap: 4px;
+}
+.attach-btn {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); transition: color .15s, background .15s;
+  margin: 4px 0 4px 6px;
+}
+.attach-btn:hover { color: var(--c); background: rgba(255,124,42,0.1); }
+.attach-btn svg { width: 18px; height: 18px; }
+
+/* Image preview strip */
+.img-preview-strip {
+  padding: 8px 10px 4px; border-bottom: 1px solid var(--border);
+}
+.img-preview-inner {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.img-thumb {
+  position: relative; width: 64px; height: 64px; border-radius: 10px;
+  overflow: hidden; border: 1px solid var(--border2); flex-shrink: 0;
+}
+.img-thumb img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.img-thumb-rm {
+  position: absolute; top: 2px; right: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,0,0,0.75); border: none; cursor: pointer;
+  color: #fff; font-size: 11px; display: flex; align-items: center;
+  justify-content: center; line-height: 1;
+}
+.img-thumb-rm:hover { background: #e03; }
+
+/* Drag-over highlight */
+.input-shell.drag-over {
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px rgba(255,124,42,0.15), 0 0 30px rgba(255,124,42,0.1);
+}
+
+/* Image in chat bubble */
+.msg-img { max-width: 220px; border-radius: 10px; display: block; margin-top: 6px; }
+
+/* 🎙 Mic button (inline in input) */
+.mic-btn {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); background: none; border: none;
+  transition: color .15s, background .15s; margin: 4px 6px 4px 0;
+}
+.mic-btn:hover { color: #f472b6; background: rgba(244,114,182,0.1); }
+.mic-btn.recording {
+  color: #f472b6; background: rgba(244,114,182,0.15);
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+.mic-btn svg { width: 18px; height: 18px; }
+@keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(244,114,182,0.4)} 50%{box-shadow:0 0 0 8px rgba(244,114,182,0)} }
+
+/* 🔊 Voice mode button */
+.voice-mode-btn {
+  height: 52px; padding: 0 16px; border-radius: 16px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border2);
+  color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 7px;
+  transition: all .2s; font-family: var(--font);
+}
+.voice-mode-btn svg { width: 17px; height: 17px; }
+.voice-mode-btn:hover { color: var(--txt); border-color: var(--c); background: rgba(255,124,42,0.08); }
+.voice-mode-btn.active {
+  color: #fff; border-color: #f472b6;
+  background: linear-gradient(135deg, rgba(244,114,182,0.25), rgba(168,85,247,0.15));
+  box-shadow: 0 0 20px rgba(244,114,182,0.25);
+}
+
+/* Voice overlay */
+.voice-overlay {
+  position: absolute; inset: 0; z-index: 200;
+  background: rgba(7,7,15,0.92); backdrop-filter: blur(24px);
+  display: flex; align-items: center; justify-content: center;
+}
+.voice-card {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  padding: 40px 32px; max-width: 380px; width: 100%;
+}
+.voice-orb-wrap { position: relative; }
+.voice-orb {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(244,114,182,0.2), rgba(168,85,247,0.2));
+  border: 2px solid rgba(244,114,182,0.3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s;
+  box-shadow: 0 0 40px rgba(244,114,182,0.15);
+}
+.voice-orb svg { width: 44px; height: 44px; stroke: rgba(244,114,182,0.8); }
+.voice-orb:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(244,114,182,0.3); }
+.voice-orb.listening {
+  border-color: #f472b6;
+  box-shadow: 0 0 0 0 rgba(244,114,182,0.4);
+  animation: orb-ripple 1.2s ease-out infinite;
+  background: linear-gradient(135deg, rgba(244,114,182,0.35), rgba(168,85,247,0.25));
+}
+.voice-orb.speaking {
+  border-color: var(--c);
+  box-shadow: 0 0 0 0 rgba(255,124,42,0.4);
+  animation: orb-ripple-c 1.4s ease-out infinite;
+  background: linear-gradient(135deg, rgba(255,124,42,0.25), rgba(255,180,80,0.15));
+}
+.voice-orb.speaking svg { stroke: rgba(255,124,42,0.9); }
+@keyframes orb-ripple { 0%{box-shadow:0 0 0 0 rgba(244,114,182,0.5)} 100%{box-shadow:0 0 0 30px rgba(244,114,182,0)} }
+@keyframes orb-ripple-c { 0%{box-shadow:0 0 0 0 rgba(255,124,42,0.5)} 100%{box-shadow:0 0 0 30px rgba(255,124,42,0)} }
+.voice-status {
+  font-size: 15px; font-weight: 600; color: var(--muted);
+  text-align: center; font-family: var(--font); min-height: 24px;
+}
+.voice-transcript {
+  font-size: 13px; color: var(--txt); text-align: center;
+  font-family: var(--font); min-height: 44px; line-height: 1.6;
+  max-width: 320px; opacity: 0.85;
+}
+.voice-end-btn {
+  padding: 11px 28px; border-radius: 12px; border: 1px solid var(--border2);
+  background: rgba(255,255,255,0.05); color: var(--muted); cursor: pointer;
+  font-size: 13px; font-weight: 600; font-family: var(--font);
+  transition: all .2s;
+}
+.voice-end-btn:hover { background: rgba(255,68,102,0.1); border-color: #ff4466; color: #ff6688; }
+
+/* BIG send button */
+.send-btn {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--c), var(--g));
+  border: none; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s, box-shadow .2s, opacity .2s;
+  box-shadow: 0 6px 24px rgba(255,124,42,0.4), 0 0 40px rgba(0,212,255,0.15);
+  position: relative; overflow: hidden;
+}
+.send-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.2), transparent);
+}
+.send-btn:hover { transform: scale(1.07); box-shadow: 0 10px 32px rgba(255,124,42,0.5); }
+.send-btn:disabled { opacity: .25; cursor: not-allowed; transform: none; box-shadow: none; }
+.send-btn svg { width: 20px; height: 20px; fill: #000; position: relative; z-index: 1; }
+
+/* Bubble color pickers */
+.color-rows { display: flex; flex-direction: column; gap: 14px; }
+.color-row { display: flex; flex-direction: column; gap: 8px; }
+.color-row-label {
+  font-size: 11px; color: var(--muted); font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.color-preview {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: rgba(255,255,255,0.05);
+  display: inline-block; flex-shrink: 0;
+  transition: background .2s;
+}
+.color-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.active { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+.swatch-custom {
+  background: var(--glass2); border: 1px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; overflow: hidden;
+  font-size: 14px; color: var(--muted);
+}
+.swatch-custom input[type=color] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.swatch-custom span { pointer-events: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .panels { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .panels.solo { grid-template-rows: 1fr; }
+  .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
+  .mode-pills { display: none; }
+  .settings-panel { width: 100%; }
+  .top { padding: 0 14px; }
+  .input-bar { padding: 12px 14px; }
+  .top-btn span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     SETUP
+════════════════════════════════════ -->
+<div id="setup">
+  <div class="setup-wrap">
+    <div class="setup-header">
+      <div class="setup-logo-row">
+        <div class="logo-orb">D</div>
+      </div>
+      <div class="setup-title">Dual AI</div>
+      <div class="setup-sub">Claude × GPT-5.4 — two minds, one question</div>
+    </div>
+
+    <div class="glass-card">
+      <div class="field-group">
+        <div class="field-label"><span class="fdot" style="background:var(--c)"></span>Claude API Key</div>
+        <input type="password" class="field-inp fc" id="claudeKey" placeholder="sk-ant-api03-…" autocomplete="off">
+        <div class="field-hint">console.anthropic.com → API Keys</div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label"><span class="fdot" style="background:var(--g)"></span>OpenAI API Key</div>
+        <input type="password" class="field-inp fg" id="openaiKey" placeholder="sk-proj-…" autocomplete="off">
+        <div class="field-hint">platform.openai.com → API Keys</div>
+      </div>
+      <button class="btn-launch" onclick="startApp()">Launch Dual AI →</button>
+      <div class="setup-note">🔒 Keys stored locally &nbsp;·&nbsp; History synced via Firebase</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SETTINGS SIDEBAR
+════════════════════════════════════ -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-backdrop" onclick="closeSettings()"></div>
+  <div class="settings-panel">
+    <div class="sp-head">
+      <span class="sp-title">Personalise</span>
+      <button class="sp-close" onclick="closeSettings()">×</button>
+    </div>
+    <div class="sp-body">
+
+      <!-- FONT FAMILY -->
+      <div>
+        <div class="sp-section-title">Font Family</div>
+        <div class="font-grid" id="fontGrid">
+          <button class="font-btn active" onclick="setFont('Outfit')" style="font-family:'Outfit'">
+            <div class="font-btn-name">Outfit</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+          <button class="font-btn" onclick="setFont('Sora')" style="font-family:'Sora'">
+            <div class="font-btn-name">Sora</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+          <button class="font-btn" onclick="setFont('Inter')" style="font-family:'Inter'">
+            <div class="font-btn-name">Inter</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+          <button class="font-btn" onclick="setFont('DM Sans')" style="font-family:'DM Sans'">
+            <div class="font-btn-name">DM Sans</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+          <button class="font-btn" onclick="setFont('Space Grotesk')" style="font-family:'Space Grotesk'">
+            <div class="font-btn-name">Space Grotesk</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+          <button class="font-btn" onclick="setFont('Nunito')" style="font-family:'Nunito'">
+            <div class="font-btn-name">Nunito</div>
+            <div class="font-btn-sample">Aa Bb Cc</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- FONT SIZE -->
+      <div>
+        <div class="sp-section-title">Message Font Size</div>
+        <div class="slider-row">
+          <span class="slider-label">12px</span>
+          <input type="range" id="fontSizeSlider" min="12" max="18" value="14" oninput="setFontSize(this.value)">
+          <span class="slider-label">18px</span>
+        </div>
+        <div style="text-align:center; margin-top:6px; font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace">
+          Current: <span id="fontSizeLbl">14</span>px
+        </div>
+      </div>
+
+      <!-- BUBBLE STYLE -->
+      <div>
+        <div class="sp-section-title">Bubble Style</div>
+        <div class="bubble-opts">
+          <button class="bubble-opt active" onclick="setBubble('rounded')" id="bub-rounded">
+            <div class="bubble-preview" style="border-radius:8px"></div>
+            Rounded
+          </button>
+          <button class="bubble-opt" onclick="setBubble('pill')" id="bub-pill">
+            <div class="bubble-preview" style="border-radius:20px"></div>
+            Pill
+          </button>
+          <button class="bubble-opt" onclick="setBubble('sharp')" id="bub-sharp">
+            <div class="bubble-preview" style="border-radius:2px"></div>
+            Sharp
+          </button>
+        </div>
+      </div>
+
+      <!-- BUBBLE COLORS -->
+      <div>
+        <div class="sp-section-title">Bubble Colors</div>
+        <div class="color-rows">
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span class="color-preview" id="prevYou"></span>
+              Your messages
+            </div>
+            <div class="color-swatches" id="swatchYou">
+              <button class="swatch active" style="background:#2a2a3e" onclick="setBubbleColor('you','#2a2a3e',this)" title="Dark"></button>
+              <button class="swatch" style="background:#1a2a1a" onclick="setBubbleColor('you','#1a2a1a',this)" title="Forest"></button>
+              <button class="swatch" style="background:#1a1a2e" onclick="setBubbleColor('you','#1a1a2e',this)" title="Navy"></button>
+              <button class="swatch" style="background:#2e1a2e" onclick="setBubbleColor('you','#2e1a2e',this)" title="Plum"></button>
+              <button class="swatch" style="background:#2a1a10" onclick="setBubbleColor('you','#2a1a10',this)" title="Ember"></button>
+              <button class="swatch" style="background:#0f2a2a" onclick="setBubbleColor('you','#0f2a2a',this)" title="Teal"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerYou" value="#2a2a3e" oninput="onColorPick('you',this.value)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span class="color-preview" id="prevClaude" style="background:rgba(255,124,42,0.15);border-color:rgba(255,124,42,0.3)"></span>
+              Claude
+            </div>
+            <div class="color-swatches" id="swatchClaude">
+              <button class="swatch active" style="background:rgba(255,124,42,0.12)" onclick="setBubbleColor('claude','rgba(255,124,42,0.12)',this)" title="Orange (default)"></button>
+              <button class="swatch" style="background:#1a1200" onclick="setBubbleColor('claude','#1a1200',this)" title="Amber"></button>
+              <button class="swatch" style="background:#1a0a00" onclick="setBubbleColor('claude','#1a0a00',this)" title="Rust"></button>
+              <button class="swatch" style="background:#12001a" onclick="setBubbleColor('claude','#12001a',this)" title="Purple"></button>
+              <button class="swatch" style="background:#001a0a" onclick="setBubbleColor('claude','#001a0a',this)" title="Green"></button>
+              <button class="swatch" style="background:#00101a" onclick="setBubbleColor('claude','#00101a',this)" title="Blue"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerClaude" value="#ff7c2a" oninput="onColorPick('claude',this.value)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span class="color-preview" id="prevGpt" style="background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.3)"></span>
+              GPT-5.4
+            </div>
+            <div class="color-swatches" id="swatchGpt">
+              <button class="swatch active" style="background:rgba(0,212,255,0.1)" onclick="setBubbleColor('gpt','rgba(0,212,255,0.1)',this)" title="Cyan (default)"></button>
+              <button class="swatch" style="background:#001a18" onclick="setBubbleColor('gpt','#001a18',this)" title="Emerald"></button>
+              <button class="swatch" style="background:#001218" onclick="setBubbleColor('gpt','#001218',this)" title="Deep sea"></button>
+              <button class="swatch" style="background:#001800" onclick="setBubbleColor('gpt','#001800',this)" title="Green"></button>
+              <button class="swatch" style="background:#100018" onclick="setBubbleColor('gpt','#100018',this)" title="Violet"></button>
+              <button class="swatch" style="background:#180010" onclick="setBubbleColor('gpt','#180010',this)" title="Magenta"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerGpt" value="#00d4ff" oninput="onColorPick('gpt',this.value)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- YOUR NAME -->
+      <div>
+        <div class="sp-section-title">Your Name</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="userNameInput" class="field-inp" placeholder="e.g. Can"
+            maxlength="20" oninput="setUserName(this.value)"
+            style="margin-bottom:0;flex:1;padding:10px 14px;font-family:var(--font);font-size:13px">
+          <button onclick="setUserName(''); document.getElementById('userNameInput').value=''"
+            class="ctx-btn-sm ctx-dl" style="flex:none;padding:10px 12px;border-radius:10px">✕</button>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px;font-family:'JetBrains Mono',monospace">
+          Replaces "YOU" in chat bubbles
+        </div>
+      </div>
+
+      <!-- LABEL COLORS -->
+      <div>
+        <div class="sp-section-title">Label Colors</div>
+        <div class="color-rows">
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span style="font-size:9px;font-weight:800;letter-spacing:2px;font-family:'JetBrains Mono',monospace;color:var(--label-you-color,#6b6b90)">YOU</span>
+              &nbsp;label
+            </div>
+            <div class="color-swatches" id="swatchLblYou">
+              <button class="swatch active" style="background:#6b6b90" onclick="setLabelColor('you','#6b6b90',this)" title="Default grey"></button>
+              <button class="swatch" style="background:#ffffff" onclick="setLabelColor('you','#ffffff',this)" title="White"></button>
+              <button class="swatch" style="background:#ff7c2a" onclick="setLabelColor('you','#ff7c2a',this)" title="Orange"></button>
+              <button class="swatch" style="background:#00d4ff" onclick="setLabelColor('you','#00d4ff',this)" title="Cyan"></button>
+              <button class="swatch" style="background:#a78bfa" onclick="setLabelColor('you','#a78bfa',this)" title="Purple"></button>
+              <button class="swatch" style="background:#34d399" onclick="setLabelColor('you','#34d399',this)" title="Green"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerLblYou" value="#6b6b90" oninput="setLabelColor('you',this.value,this.parentElement)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span style="font-size:9px;font-weight:800;letter-spacing:2px;font-family:'JetBrains Mono',monospace;color:var(--label-c-color,#ff7c2a)">CLAUDE</span>
+              &nbsp;label
+            </div>
+            <div class="color-swatches" id="swatchLblClaude">
+              <button class="swatch active" style="background:#ff7c2a" onclick="setLabelColor('claude','#ff7c2a',this)" title="Orange (default)"></button>
+              <button class="swatch" style="background:#ffffff" onclick="setLabelColor('claude','#ffffff',this)" title="White"></button>
+              <button class="swatch" style="background:#ffcc44" onclick="setLabelColor('claude','#ffcc44',this)" title="Yellow"></button>
+              <button class="swatch" style="background:#f472b6" onclick="setLabelColor('claude','#f472b6',this)" title="Pink"></button>
+              <button class="swatch" style="background:#a78bfa" onclick="setLabelColor('claude','#a78bfa',this)" title="Purple"></button>
+              <button class="swatch" style="background:#34d399" onclick="setLabelColor('claude','#34d399',this)" title="Green"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerLblClaude" value="#ff7c2a" oninput="setLabelColor('claude',this.value,this.parentElement)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="color-row">
+            <div class="color-row-label">
+              <span style="font-size:9px;font-weight:800;letter-spacing:2px;font-family:'JetBrains Mono',monospace;color:var(--label-g-color,#00d4ff)">GPT</span>
+              &nbsp;label
+            </div>
+            <div class="color-swatches" id="swatchLblGpt">
+              <button class="swatch active" style="background:#00d4ff" onclick="setLabelColor('gpt','#00d4ff',this)" title="Cyan (default)"></button>
+              <button class="swatch" style="background:#ffffff" onclick="setLabelColor('gpt','#ffffff',this)" title="White"></button>
+              <button class="swatch" style="background:#34d399" onclick="setLabelColor('gpt','#34d399',this)" title="Green"></button>
+              <button class="swatch" style="background:#f472b6" onclick="setLabelColor('gpt','#f472b6',this)" title="Pink"></button>
+              <button class="swatch" style="background:#a78bfa" onclick="setLabelColor('gpt','#a78bfa',this)" title="Purple"></button>
+              <button class="swatch" style="background:#ffcc44" onclick="setLabelColor('gpt','#ffcc44',this)" title="Yellow"></button>
+              <label class="swatch swatch-custom" title="Custom color">
+                <input type="color" id="colorPickerLblGpt" value="#00d4ff" oninput="setLabelColor('gpt',this.value,this.parentElement)">
+                <span>+</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- THEME -->
+      <div>
+        <div class="sp-section-title">Theme</div>
+        <div class="theme-big">
+          <button class="theme-opt active" onclick="setTheme('dark')" id="th-dark">
+            <div class="theme-opt-icon">🌙</div>
+            Dark
+          </button>
+          <button class="theme-opt" onclick="setTheme('light')" id="th-light">
+            <div class="theme-opt-icon">☀️</div>
+            Light
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTEXT PROMPT -->
+      <div>
+        <div class="sp-section-title">
+          Context Prompt
+          <span class="ctx-pip2" id="ctxPip2" style="display:inline-block;margin-left:6px;vertical-align:middle"></span>
+        </div>
+        <textarea class="ctx-ta" id="ctxInput"
+          placeholder="My name is Can. I live in London…&#10;&#10;Paste your master prompt here."></textarea>
+        <div class="ctx-btns">
+          <button class="ctx-btn-sm ctx-save" onclick="saveCtx()">Save & Sync</button>
+          <button class="ctx-btn-sm ctx-dl"   onclick="exportTxt()">↓ .txt</button>
+          <button class="ctx-btn-sm ctx-mail" onclick="exportMail()">✉ Mail</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     APP
+════════════════════════════════════ -->
+<div id="app">
+
+  <div class="top">
+    <div class="top-brand">
+      <div class="top-orb">D</div>
+      <div class="top-name">Dual AI</div>
+    </div>
+
+    <div class="mode-pills">
+      <button class="mpill on-both" id="mboth" onclick="setAI('both')">Both</button>
+      <button class="mpill" id="mcla"  onclick="setAI('c')">Claude</button>
+      <button class="mpill" id="mgpt"  onclick="setAI('g')">GPT</button>
+    </div>
+
+    <div class="top-right">
+      <span class="ctx-pip2" id="ctxPip" style="margin-right:2px"></span>
+      <button class="top-btn new" onclick="newChat()">＋ <span>New</span></button>
+      <button class="top-btn save" onclick="saveChat()">↓ <span>Save</span></button>
+      <button class="top-btn settings" onclick="openSettings()">⚙ <span>Personalise</span></button>
+      <button class="top-btn" onclick="resetApp()" title="Change API keys" style="padding:0 12px">⚿</button>
+    </div>
+  </div>
+
+  <div id="syncBar">
+    <div id="sDot"></div>
+    <span id="sTxt">Connecting…</span>
+  </div>
+
+  <div class="panels" id="panels">
+    <!-- CLAUDE -->
+    <div class="panel" id="panelC">
+      <div class="panel-hd panel-hd-c">
+        <div class="ph-glow" style="background:var(--c);box-shadow:0 0 10px var(--c)"></div>
+        <span class="ph-label" style="color:var(--c)">Claude</span>
+        <span class="ph-model-tag">Sonnet 4</span>
+        <span class="ph-state" id="cSt">Ready</span>
+      </div>
+      <div class="msgs" id="cMsgs">
+        <div class="empty-st">
+          <div class="es-orb">◐</div>
+          <div class="es-lbl">Claude is ready</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPT -->
+    <div class="panel" id="panelG">
+      <div class="panel-hd panel-hd-g">
+        <div class="ph-glow" style="background:var(--g);box-shadow:0 0 10px var(--g)"></div>
+        <span class="ph-label" style="color:var(--g)">GPT</span>
+        <span class="ph-model-tag">5.4</span>
+        <span class="ph-state" id="gSt">Ready</span>
+      </div>
+      <div class="msgs" id="gMsgs">
+        <div class="empty-st">
+          <div class="es-orb">◑</div>
+          <div class="es-lbl">GPT-5.4 is ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-bar" id="inputBar">
+    <div class="input-shell" id="inputShell">
+      <!-- Image preview strip -->
+      <div class="img-preview-strip" id="imgPreviewStrip" style="display:none">
+        <div class="img-preview-inner" id="imgPreviewInner"></div>
+      </div>
+      <div class="input-row">
+        <!-- 📎 attach button -->
+        <label class="attach-btn" title="Attach image">
+          <input type="file" id="fileInput" accept="image/*" capture multiple style="display:none" onchange="onFileSelect(this.files)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        </label>
+        <textarea id="prompt" rows="1" placeholder="Ask both AIs anything…"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <!-- 🎙 mic button -->
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Hold to record">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    </button>
+    <!-- 🔊 voice mode button -->
+    <button class="voice-mode-btn" id="voiceModeBtn" onclick="toggleVoiceMode()" title="Voice conversation mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>
+      <span>Voice</span>
+    </button>
+  </div>
+
+  <!-- Voice conversation overlay -->
+  <div class="voice-overlay" id="voiceOverlay" style="display:none">
+    <div class="voice-card">
+      <div class="voice-orb-wrap">
+        <div class="voice-orb" id="voiceOrb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+        </div>
+      </div>
+      <div class="voice-status" id="voiceStatus">Tap the orb to speak</div>
+      <div class="voice-transcript" id="voiceTranscript"></div>
+      <div class="voice-actions">
+        <button class="voice-end-btn" onclick="endVoiceMode()">✕ End Voice</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     FIREBASE + LOGIC
+════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const fb = initializeApp({
+  apiKey:"AIzaSyBxyp2LcTM4WKw81mtlvN3bffwJBv9ULTg",
+  authDomain:"dual-ai-a2249.firebaseapp.com",
+  projectId:"dual-ai-a2249",
+  storageBucket:"dual-ai-a2249.firebasestorage.app",
+  messagingSenderId:"751675631927",
+  appId:"1:751675631927:web:368ecb89ba62549a3bd2b2"
+});
+const db = getFirestore(fb);
+const S='sessions/main', P='settings/masterPrompt';
+
+let ck='', ok='', cH=[], gH=[], mp='', busy=false, syncing=false, unsub=null;
+let aiMode='both';
+
+let pendingImgs = []; // [{dataUrl, mediaType}]
+
+const $ = id => document.getElementById(id);
+
+// ══════════════════════════
+// PERSONALISE
+// ══════════════════════════
+
+window.setUserName = (name) => {
+  const val = name.trim().toUpperCase() || 'YOU';
+  localStorage.setItem('dai_username', val);
+  // update all existing labels live
+  document.querySelectorAll('.msg-u-label').forEach(el => el.textContent = val);
+};
+
+function loadUserName() {
+  const name = localStorage.getItem('dai_username') || 'YOU';
+  const inp = document.getElementById('userNameInput');
+  if (inp) inp.value = name === 'YOU' ? '' : name;
+}
+
+window.setLabelColor = (target, color, btn) => {
+  const swatchId = target==='you'?'swatchLblYou':target==='claude'?'swatchLblClaude':'swatchLblGpt';
+  document.querySelectorAll(`#${swatchId} .swatch`).forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  const varName = target==='you'?'--label-you-color':target==='claude'?'--label-c-color':'--label-g-color';
+  document.documentElement.style.setProperty(varName, color);
+  localStorage.setItem('dai_lbl_'+target, color);
+};
+
+function loadLabelColors() {
+  const you    = localStorage.getItem('dai_lbl_you')    || '#6b6b90';
+  const claude = localStorage.getItem('dai_lbl_claude') || '#ff7c2a';
+  const gpt    = localStorage.getItem('dai_lbl_gpt')    || '#00d4ff';
+  document.documentElement.style.setProperty('--label-you-color', you);
+  document.documentElement.style.setProperty('--label-c-color', claude);
+  document.documentElement.style.setProperty('--label-g-color', gpt);
+}
+loadLabelColors();
+
+window.onColorPick = (target, hex) => {
+  // for claude/gpt add transparency, for you use solid
+  const color = target==='you' ? hex : hex+'40';
+  const labelEl = document.getElementById(
+    target==='you'?'colorPickerYou':target==='claude'?'colorPickerClaude':'colorPickerGpt'
+  ).parentElement;
+  // deactivate other swatches, activate custom label
+  const swatchId = target==='you'?'swatchYou':target==='claude'?'swatchClaude':'swatchGpt';
+  document.querySelectorAll(`#${swatchId} .swatch`).forEach(s=>s.classList.remove('active'));
+  labelEl.classList.add('active');
+  // update preview
+  const prevId = target==='you'?'prevYou':target==='claude'?'prevClaude':'prevGpt';
+  document.getElementById(prevId).style.background = color;
+  // apply
+  const varName = target==='you'?'--bubble-you-bg':target==='claude'?'--bubble-c-bg':'--bubble-g-bg';
+  document.documentElement.style.setProperty(varName, color);
+  localStorage.setItem('dai_color_'+target, color);
+};
+
+window.setBubbleColor = (target, color, btn) => {
+  // mark active swatch
+  const swatchId = target==='you'?'swatchYou':target==='claude'?'swatchClaude':'swatchGpt';
+  document.querySelectorAll(`#${swatchId} .swatch`).forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+
+  // update preview dot
+  const prevId = target==='you'?'prevYou':target==='claude'?'prevClaude':'prevGpt';
+  document.getElementById(prevId).style.background = color;
+
+  // apply to bubbles
+  if (target==='you') {
+    document.documentElement.style.setProperty('--bubble-you-bg', color);
+  } else if (target==='claude') {
+    document.documentElement.style.setProperty('--bubble-c-bg', color);
+  } else {
+    document.documentElement.style.setProperty('--bubble-g-bg', color);
+  }
+  localStorage.setItem('dai_color_'+target, color);
+};
+
+function loadColors() {
+  const you    = localStorage.getItem('dai_color_you')    || '#2a2a3e';
+  const claude = localStorage.getItem('dai_color_claude') || 'rgba(255,124,42,0.12)';
+  const gpt    = localStorage.getItem('dai_color_gpt')    || 'rgba(0,212,255,0.1)';
+  document.documentElement.style.setProperty('--bubble-you-bg', you);
+  document.documentElement.style.setProperty('--bubble-c-bg', claude);
+  document.documentElement.style.setProperty('--bubble-g-bg', gpt);
+  document.getElementById('prevYou').style.background = you;
+  document.getElementById('prevClaude').style.background = claude;
+  document.getElementById('prevGpt').style.background = gpt;
+}
+loadColors();
+
+window.setFont = (font) => {
+  document.documentElement.style.setProperty('--font', `'${font}', sans-serif`);
+  document.documentElement.style.setProperty('--font-msg', `'${font}', sans-serif`);
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  localStorage.setItem('dai_font', font);
+};
+
+window.setFontSize = (v) => {
+  document.documentElement.style.setProperty('--msg-size', v+'px');
+  $('fontSizeLbl').textContent = v;
+  localStorage.setItem('dai_fsize', v);
+};
+
+window.setBubble = (style) => {
+  const radii = { rounded:'14px', pill:'24px', sharp:'4px' };
+  document.documentElement.style.setProperty('--bubble-radius', radii[style]);
+  ['rounded','pill','sharp'].forEach(s => $('bub-'+s).classList.remove('active'));
+  $('bub-'+style).classList.add('active');
+  localStorage.setItem('dai_bubble', style);
+};
+
+window.setTheme = (t) => {
+  const dark = t==='dark';
+  document.body.style.setProperty('--bg',    dark?'#07070f':'#f0f0f7');
+  document.body.style.setProperty('--bg2',   dark?'#0d0d1a':'#e4e4ef');
+  document.body.style.setProperty('--glass', dark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)');
+  document.body.style.setProperty('--glass2',dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)');
+  document.body.style.setProperty('--border',dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.1)');
+  document.body.style.setProperty('--border2',dark?'rgba(255,255,255,0.14)':'rgba(0,0,0,0.18)');
+  document.body.style.setProperty('--txt',   dark?'#f2f2ff':'#111128');
+  document.body.style.setProperty('--muted', dark?'#6b6b90':'#44446a');
+  document.body.style.setProperty('--dim',   dark?'#30304a':'#8888aa');
+  // fix hardcoded dark backgrounds on panels/topbar
+  document.querySelectorAll('.top,.input-bar,#syncBar').forEach(el=>{
+    el.style.background = dark ? '' : 'rgba(240,240,247,0.92)';
+  });
+  document.querySelectorAll('.panel-hd').forEach(el=>{
+    el.style.background = dark ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.7)';
+  });
+  document.querySelectorAll('.msgs').forEach(el=>{
+    el.style.background = dark ? '' : '#f0f0f7';
+  });
+  $('th-dark').classList.toggle('active', dark);
+  $('th-light').classList.toggle('active', !dark);
+  localStorage.setItem('dai_theme', t);
+};
+
+function loadPrefs() {
+  const font   = localStorage.getItem('dai_font') || 'Outfit';
+  const fsize  = localStorage.getItem('dai_fsize') || '14';
+  const bubble = localStorage.getItem('dai_bubble') || 'rounded';
+  const theme  = localStorage.getItem('dai_theme') || 'dark';
+  document.documentElement.style.setProperty('--font', `'${font}', sans-serif`);
+  document.documentElement.style.setProperty('--font-msg', `'${font}', sans-serif`);
+  document.documentElement.style.setProperty('--msg-size', fsize+'px');
+  $('fontSizeSlider').value = fsize;
+  $('fontSizeLbl').textContent = fsize;
+  const radii = { rounded:'14px', pill:'24px', sharp:'4px' };
+  document.documentElement.style.setProperty('--bubble-radius', radii[bubble]||'14px');
+  $('bub-'+bubble)?.classList.add('active');
+  if (theme==='light') setTheme('light');
+  // mark active font button
+  document.querySelectorAll('.font-btn').forEach(b => {
+    const fn = b.querySelector('.font-btn-name')?.textContent;
+    b.classList.toggle('active', fn===font);
+  });
+}
+loadPrefs();
+
+// ══════════════════════════
+// SETTINGS PANEL
+// ══════════════════════════
+window.openSettings = () => {
+  $('ctxInput').value = mp;
+  loadUserName();
+  $('settingsOverlay').classList.add('open');
+};
+window.closeSettings = () => $('settingsOverlay').classList.remove('open');
+
+// ══════════════════════════
+// CONTEXT / MASTER PROMPT
+// ══════════════════════════
+window.saveCtx = async () => {
+  mp = $('ctxInput').value.trim();
+  updPip(); await savePFB(mp);
+  // flash feedback
+  const btn = event.currentTarget;
+  btn.textContent = 'Saved ✓'; btn.style.opacity='0.7';
+  setTimeout(()=>{btn.textContent='Save & Sync';btn.style.opacity='';},1500);
+};
+const updPip = () => {
+  $('ctxPip')?.classList.toggle('on', mp.length>0);
+  $('ctxPip2')?.classList.toggle('on', mp.length>0);
+};
+window.exportTxt = () => {
+  const text=$('ctxInput').value.trim(); if(!text){alert('Empty.');return;}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));
+  a.download='master-prompt.txt'; a.click();
+};
+window.exportMail = () => {
+  const text=$('ctxInput').value.trim(); if(!text){alert('Empty.');return;}
+  window.open(`mailto:?subject=${encodeURIComponent('Dual AI — Master Prompt')}&body=${encodeURIComponent(text)}`);
+};
+
+// ══════════════════════════
+// AI MODE SELECTOR
+// ══════════════════════════
+window.setAI = (mode) => {
+  aiMode = mode;
+  ['mboth','mcla','mgpt'].forEach(id=>$(id).className='mpill');
+  if (mode==='both') $('mboth').classList.add('on-both');
+  else if (mode==='c') $('mcla').classList.add('on-c');
+  else $('mgpt').classList.add('on-g');
+  $('panelC').classList.toggle('hidden', mode==='g');
+  $('panelG').classList.toggle('hidden', mode==='c');
+  $('panels').classList.toggle('solo', mode!=='both');
+  $('prompt').placeholder = mode==='both'?'Ask both AIs anything…':mode==='c'?'Ask Claude anything…':'Ask GPT-5.4 anything…';
+};
+
+// ══════════════════════════
+// FIREBASE
+// ══════════════════════════
+function setSyncUI(state, msg) {
+  $('syncBar').classList.add('on'); $('sDot').className=state; $('sTxt').textContent=msg;
+  if (state==='synced') setTimeout(()=>$('syncBar').classList.remove('on'),2200);
+}
+async function saveFB() {
+  if(syncing)return; syncing=true; setSyncUI('syncing','Syncing…');
+  try { await setDoc(doc(db,S),{claudeHistory:cH,gptHistory:gH,updatedAt:Date.now()}); setSyncUI('synced','Synced ✓'); }
+  catch(e){ setSyncUI('error','Error: '+e.message); }
+  syncing=false;
+}
+async function savePFB(p){ try{await setDoc(doc(db,P),{value:p,updatedAt:Date.now()});}catch{} }
+async function loadFB() {
+  setSyncUI('syncing','Loading…');
+  try {
+    const ps=await getDoc(doc(db,P)); if(ps.exists()){mp=ps.data().value||'';updPip();}
+    const ss=await getDoc(doc(db,S)); if(ss.exists()){const d=ss.data();cH=d.claudeHistory||[];gH=d.gptHistory||[];if(cH.length)render();}
+    setSyncUI('synced','Loaded ✓'); live();
+  } catch{ setSyncUI('error','Load error'); }
+}
+function live(){
+  if(unsub)unsub();
+  unsub=onSnapshot(doc(db,S),snap=>{
+    if(!snap.exists()||busy)return;
+    const d=snap.data();
+    if(d.updatedAt>(cH._ts||0)){cH=d.claudeHistory||[];gH=d.gptHistory||[];cH._ts=d.updatedAt;render();setSyncUI('synced','Updated from another device ✓');}
+  });
+}
+
+// ══════════════════════════
+// RENDER HISTORY
+// ══════════════════════════
+function render(){
+  $('cMsgs').innerHTML=''; $('gMsgs').innerHTML='';
+  const ch=cH.filter(m=>!m._system), gh=gH.filter(m=>!m._system);
+  for(let i=0;i<ch.length;i++){
+    if(ch[i].role==='user'){
+      const txt = typeof ch[i].content==='string' ? ch[i].content : (ch[i].content||'');
+      const thumbs = ch[i]._thumbs || [];
+      addYou('cMsgs', txt, thumbs.map(t=>({dataUrl:t})));
+      addYou('gMsgs', txt, thumbs.map(t=>({dataUrl:t})));
+      i++;
+      if(ch[i]?.role==='assistant') addAI('cMsgs',ch[i].content,'c');
+      if(gh[i]?.role==='assistant') addAI('gMsgs',gh[i].content,'g');
+    }
+  }
+}
+
+// ══════════════════════════
+// KEYS + LIFECYCLE
+// ══════════════════════════
+(function loadKeys(){
+  const a=localStorage.getItem('dai2_ck'),b=localStorage.getItem('dai2_ok');
+  if(a)$('claudeKey').value=a; if(b)$('openaiKey').value=b;
+})();
+
+window.startApp = async()=>{
+  ck=$('claudeKey').value.trim(); ok=$('openaiKey').value.trim();
+  if(!ck||!ok){alert('Please enter both API keys.');return;}
+  localStorage.setItem('dai2_ck',ck); localStorage.setItem('dai2_ok',ok);
+  $('setup').style.display='none'; $('app').style.display='flex';
+  initDragDrop();
+  await loadFB(); $('prompt').focus();
+};
+window.resetApp = ()=>{
+  if(unsub)unsub(); $('setup').style.display='flex'; $('app').style.display='none';
+};
+window.newChat = async()=>{
+  if(!confirm('Clear chat on all devices?'))return;
+  cH=[];gH=[];
+  $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
+  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  await saveFB();
+};
+window.saveChat = ()=>{
+  if(!cH.length){alert('No conversation.');return;}
+  let t='DUAL AI — Export\n'+new Date().toLocaleString()+'\n'+'─'.repeat(48)+'\n\n';
+  const cm=cH.filter(m=>!m._system),gm=gH.filter(m=>!m._system);
+  for(let i=0;i<cm.length;i++){
+    if(cm[i].role==='user'){
+      t+=`YOU:\n${cm[i].content}\n\n`;
+      if(cm[i+1]?.role==='assistant') t+=`CLAUDE:\n${cm[i+1].content}\n\n`;
+      if(gm[i+1]?.role==='assistant') t+=`GPT-5.4:\n${gm[i+1].content}\n\n`;
+      t+='─'.repeat(40)+'\n\n'; i++;
+    }
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'})); a.download=`dual-ai-${Date.now()}.txt`; a.click();
+};
+
+// ══════════════════════════
+// IMAGE UPLOAD
+// ══════════════════════════
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res({ dataUrl: r.result, mediaType: file.type || 'image/jpeg' });
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function makeThumb(dataUrl, maxPx=200) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const c = document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', 0.75)); // ~10-20KB
+    };
+    img.src = dataUrl;
+  });
+}
+
+// Claude max 5MB base64 — sıkıştırarak altında tut
+function resizeForAPI(dataUrl) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      let maxPx = 1920;
+      let quality = 0.85;
+      const tryEncode = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const result = c.toDataURL('image/jpeg', quality);
+        // base64 length → approx byte size
+        const approxBytes = Math.round(result.length * 0.75);
+        if (approxBytes > 3800000) { // keep well under 5MB
+          if (quality > 0.45) quality -= 0.15;
+          else maxPx = Math.round(maxPx * 0.75);
+          tryEncode();
+        } else {
+          res(result);
+        }
+      };
+      tryEncode();
+    };
+    img.src = dataUrl;
+  });
+}
+
+window.onFileSelect = async (files) => {
+  for (const f of files) {
+    if (!f.type.startsWith('image/')) continue;
+    const obj = await fileToBase64(f);
+    pendingImgs.push(obj);
+  }
+  renderPreviews();
+};
+
+window.removeImg = (idx) => {
+  pendingImgs.splice(idx, 1);
+  renderPreviews();
+};
+
+function renderPreviews() {
+  const strip = $('imgPreviewStrip');
+  const inner = $('imgPreviewInner');
+  if (!pendingImgs.length) { strip.style.display = 'none'; inner.innerHTML = ''; return; }
+  strip.style.display = 'block';
+  inner.innerHTML = pendingImgs.map((img, i) =>
+    `<div class="img-thumb">
+      <img src="${img.dataUrl}">
+      <button class="img-thumb-rm" onclick="removeImg(${i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+// Drag & drop
+function initDragDrop() {
+  const shell = $('inputShell');
+  shell.addEventListener('dragover', e => { e.preventDefault(); shell.classList.add('drag-over'); });
+  shell.addEventListener('dragleave', () => shell.classList.remove('drag-over'));
+  shell.addEventListener('drop', async e => {
+    e.preventDefault(); shell.classList.remove('drag-over');
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+    for (const f of files) { pendingImgs.push(await fileToBase64(f)); }
+    renderPreviews();
+  });
+}
+
+// ══════════════════════════
+// VOICE — MIC + WHISPER + TTS
+// ══════════════════════════
+let mediaRecorder=null, audioChunks=[], isRecording=false;
+let voiceMode=false, voiceBusy=false, currentAudio=null;
+
+// ── Mic recording (inline — transcribes and fills textarea) ──
+window.toggleMic = async () => {
+  if (isRecording) { stopRecording(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, {mimeType: getSupportedMime()});
+    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t=>t.stop());
+      $('micBtn').classList.remove('recording');
+      isRecording = false;
+      const blob = new Blob(audioChunks, {type: getSupportedMime()});
+      const txt = await whisper(blob);
+      if (txt) {
+        $('prompt').value = txt;
+        autoResize($('prompt'));
+        $('prompt').focus();
+      }
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    $('micBtn').classList.add('recording');
+  } catch(e) { alert('Microphone access denied.'); }
+};
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) { mediaRecorder.stop(); }
+}
+
+function getSupportedMime() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  return types.find(t => MediaRecorder.isTypeSupported(t)) || 'audio/webm';
+}
+
+async function whisper(blob) {
+  const apiKey = ok || ck; // OpenAI key preferred for Whisper
+  if (!apiKey) return '';
+  const fd = new FormData();
+  const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm';
+  fd.append('file', blob, `audio.${ext}`);
+  fd.append('model', 'whisper-1');
+  fd.append('language', 'tr'); // Türkçe öncelikli, karışık da çalışır
+  try {
+    const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method:'POST', headers:{'Authorization':`Bearer ${ok}`}, body: fd
+    });
+    if (!r.ok) { const e=await r.json(); throw e.error?.message||'Whisper error'; }
+    return (await r.json()).text || '';
+  } catch(e) { addErr('cMsgs', 'Whisper: '+e); return ''; }
+}
+
+// ── TTS (OpenAI) ──
+async function speak(text) {
+  if (!ok || !text) return;
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio=null; }
+    const r = await fetch('https://api.openai.com/v1/audio/speech', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${ok}`},
+      body: JSON.stringify({model:'tts-1', voice:'nova', input: text, speed: 1.0})
+    });
+    if (!r.ok) return;
+    const buf = await r.arrayBuffer();
+    const blob = new Blob([buf], {type:'audio/mpeg'});
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.play();
+    return new Promise(res => { currentAudio.onended = () => { URL.revokeObjectURL(url); res(); }; });
+  } catch(e) { console.error('TTS error:', e); }
+}
+
+// ── Voice conversation mode ──
+window.toggleVoiceMode = () => {
+  voiceMode ? endVoiceMode() : startVoiceMode();
+};
+
+function startVoiceMode() {
+  voiceMode = true;
+  $('voiceOverlay').style.display = 'flex';
+  $('voiceModeBtn').classList.add('active');
+  setVoiceStatus('Tap the orb to speak', '');
+}
+
+window.endVoiceMode = () => {
+  voiceMode = false;
+  voiceBusy = false;
+  if (isRecording) stopRecording();
+  if (currentAudio) { currentAudio.pause(); currentAudio=null; }
+  $('voiceOverlay').style.display = 'none';
+  $('voiceModeBtn').classList.remove('active');
+  $('voiceOrb').classList.remove('listening','speaking');
+};
+
+function setVoiceStatus(status, transcript='') {
+  $('voiceStatus').textContent = status;
+  if (transcript !== undefined) $('voiceTranscript').textContent = transcript;
+}
+
+// Orb tap → record → transcribe → send → TTS
+$('voiceOrb')?.addEventListener('click', async () => {
+  if (voiceBusy) return;
+  if (isRecording) {
+    // Stop recording
+    stopRecording();
+    return;
+  }
+  // Start recording
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, {mimeType: getSupportedMime()});
+    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t=>t.stop());
+      isRecording = false;
+      voiceBusy = true;
+      $('voiceOrb').classList.remove('listening');
+      setVoiceStatus('Transcribing…', '');
+
+      const blob = new Blob(audioChunks, {type: getSupportedMime()});
+      const txt = await whisper(blob);
+      if (!txt) { voiceBusy=false; setVoiceStatus('Tap to speak', ''); return; }
+
+      setVoiceStatus('Sending…', txt);
+
+      // Inject into textarea and send
+      $('prompt').value = txt;
+      await sendMessage();
+
+      // After sendMessage, get the last AI reply and speak it
+      setVoiceStatus('Speaking…', txt);
+      $('voiceOrb').classList.add('speaking');
+
+      // Grab latest AI text from history
+      const useC = aiMode==='both'||aiMode==='c';
+      const hist = useC ? cH : gH;
+      const lastAI = [...hist].reverse().find(m=>m.role==='assistant' && !m._system);
+      if (lastAI?.content) await speak(lastAI.content);
+
+      $('voiceOrb').classList.remove('speaking');
+      voiceBusy = false;
+      setVoiceStatus('Tap to speak again', '');
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    $('voiceOrb').classList.add('listening');
+    setVoiceStatus('Listening… tap again to stop', '');
+  } catch(e) { alert('Microphone access denied.'); }
+});
+
+// ══════════════════════════
+// UI HELPERS
+// ══════════════════════════
+window.handleKey  = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}};
+window.autoResize = el=>{el.style.height='auto';el.style.height=Math.min(el.scrollHeight,130)+'px';};
+
+const clrEmpty = id=>{const e=$(id).querySelector('.empty-st');if(e)e.remove();};
+const scrollBot = id=>{const el=$(id);el.scrollTop=el.scrollHeight;};
+
+function addYou(id, txt, imgs=[]) {
+  clrEmpty(id);
+  const d = document.createElement('div'); d.className = 'msg msg-u';
+  const lbl = document.createElement('span'); lbl.className = 'msg-u-label';
+  lbl.textContent = localStorage.getItem('dai_username') || 'YOU';
+  d.appendChild(lbl);
+  if (txt) d.appendChild(document.createTextNode(txt));
+  imgs.forEach(img => {
+    const el = document.createElement('img');
+    el.src = img.dataUrl; el.className = 'msg-img';
+    d.appendChild(el);
+  });
+  $(id).appendChild(d); scrollBot(id);
+}
+function addThinking(id,type){
+  clrEmpty(id);
+  const d=document.createElement('div'); d.className=`thinking th-${type}`; d.id=`td-${id}`;
+  d.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+  $(id).appendChild(d); scrollBot(id);
+}
+function rmThinking(id){const e=$(`td-${id}`);if(e)e.remove();}
+function addAI(id,txt,type){
+  const d=document.createElement('div'); d.className=`msg msg-ai ai-${type}`;
+  const lbl=document.createElement('div'); lbl.className='ai-lbl';
+  lbl.textContent=type==='c'?'Claude Sonnet':'GPT-5.4';
+  const cnt=document.createElement('div'); cnt.textContent=txt;
+  d.appendChild(lbl); d.appendChild(cnt); $(id).appendChild(d); scrollBot(id);
+}
+function addErr(id,msg){
+  const d=document.createElement('div'); d.className='msg msg-err'; d.textContent='⚠ '+msg;
+  $(id).appendChild(d); scrollBot(id);
+}
+function setState(id,txt,cls=''){const el=$(id);el.textContent=txt;el.className='ph-state '+cls;}
+
+// ══════════════════════════
+// SEND
+// ══════════════════════════
+async function sendMessage(){
+  if(busy)return;
+  const p=$('prompt').value.trim();
+  const imgs = [...pendingImgs];
+  if(!p && !imgs.length) return;
+  busy=true; $('sendBtn').disabled=true;
+  $('prompt').value=''; $('prompt').style.height='auto';
+  pendingImgs=[]; renderPreviews();
+
+  if(mp&&cH.length===0){
+    cH.push({role:'user',content:mp,_system:true}); cH.push({role:'assistant',content:'Understood.'});
+    gH.push({role:'user',content:mp,_system:true}); gH.push({role:'assistant',content:'Understood.'});
+  }
+
+  const useC=aiMode==='both'||aiMode==='c';
+  const useG=aiMode==='both'||aiMode==='g';
+
+  if(useC) addYou('cMsgs', p, imgs);
+  if(useG) addYou('gMsgs', p, imgs);
+
+  // Build content array for APIs
+  let cContent, gContent;
+  if(imgs.length) {
+    // Generate thumbnails for storage (small, ~15KB each)
+    const thumbs = await Promise.all(imgs.map(img => makeThumb(img.dataUrl)));
+
+    // Claude: sıkıştırılmış görsel (max 5MB altı)
+    const resized = await Promise.all(imgs.map(img => resizeForAPI(img.dataUrl)));
+    cContent = [];
+    resized.forEach(dataUrl => {
+      cContent.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data: dataUrl.split(',')[1] }});
+    });
+    if(p) cContent.push({ type:'text', text: p });
+
+    // GPT: orijinal (limit yok)
+    gContent = [];
+    imgs.forEach(img => {
+      gContent.push({ type:'image_url', image_url:{ url: img.dataUrl }});
+    });
+    if(p) gContent.push({ type:'text', text: p });
+
+    // Store thumbs + full api content in history
+    const histEntry = {
+      role:'user',
+      content: p || '[image]',        // fallback text so API never gets empty
+      _thumbs: thumbs,
+      _cContent: cContent,            // full Claude content array (this session only)
+      _gContent: gContent             // full GPT content array (this session only)
+    };
+    cH.push(histEntry);
+    gH.push({...histEntry});
+  } else {
+    cContent = p;
+    gContent = p;
+    cH.push({role:'user', content: cContent});
+    gH.push({role:'user', content: gContent});
+  }
+
+  if(useC){addThinking('cMsgs','c');setState('cSt','Thinking…','tc');}
+  if(useG){addThinking('gMsgs','g');setState('gSt','Thinking…','tg');}
+
+  const [cr,gr]=await Promise.allSettled([
+    useC?callC(cH):Promise.resolve(null),
+    useG?callG(gH):Promise.resolve(null)
+  ]);
+
+  if(useC){
+    rmThinking('cMsgs');
+    if(cr.status==='fulfilled'&&cr.value!==null){addAI('cMsgs',cr.value,'c');cH.push({role:'assistant',content:cr.value});setState('cSt','Ready');}
+    else if(cr.status==='rejected'){addErr('cMsgs',cr.reason);cH.pop();setState('cSt','Error');}
+  }
+  if(useG){
+    rmThinking('gMsgs');
+    if(gr.status==='fulfilled'&&gr.value!==null){addAI('gMsgs',gr.value,'g');gH.push({role:'assistant',content:gr.value});setState('gSt','Ready');}
+    else if(gr.status==='rejected'){addErr('gMsgs',gr.reason);gH.pop();setState('gSt','Error');}
+  }
+
+  await saveFB(); busy=false; $('sendBtn').disabled=false; $('prompt').focus();
+}
+window.sendMessage=sendMessage;
+
+// ══════════════════════════
+// API
+// ══════════════════════════
+async function callC(h){
+  const msgs = h.map(({role, content, _cContent, _system}) => {
+    if (_system) return {role, content: typeof content==='string' ? content : 'Understood.'};
+    // Image message this session — use full content array
+    if (_cContent) return {role, content: _cContent};
+    // Image from previous session (no full data) — send text only
+    if (Array.isArray(content)) return {role, content: '[image shared earlier]'};
+    return {role, content: content || '[image]'};
+  });
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':ck,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1024,messages:msgs})
+  });
+  if(!r.ok){const e=await r.json();throw e.error?.message||'Claude error';}
+  return (await r.json()).content[0].text;
+}
+async function callG(h){
+  const msgs = h.map(({role, content, _gContent, _system}) => {
+    if (_system) return {role, content: typeof content==='string' ? content : 'Understood.'};
+    if (_gContent) return {role, content: _gContent};
+    if (Array.isArray(content)) return {role, content: '[image shared earlier]'};
+    return {role, content: content || '[image]'};
+  });
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${ok}`},
+    body:JSON.stringify({model:'gpt-5.4',messages:msgs,max_completion_tokens:1024})
+  });
+  if(!r.ok){const e=await r.json();throw e.error?.message||'GPT error';}
+  return (await r.json()).choices[0].message.content;
+}
+</script>
+</body>
+</html>
