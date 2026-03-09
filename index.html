@@ -1748,6 +1748,7 @@ window.startApp = async()=>{
   if(!ck||!ok){alert('Please enter both API keys.');return;}
   localStorage.setItem('dai2_ck',ck); localStorage.setItem('dai2_ok',ok);
   $('setup').style.display='none'; $('app').style.display='flex';
+  await new Promise(r=>setTimeout(r,50)); // DOM'un render edilmesi için bekle
   initDragDrop();
   await loadFB(); $('prompt').focus();
 };
