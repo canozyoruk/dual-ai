@@ -6,6 +6,7 @@
 <title>Dual AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
 /* ══════════════════════════════════════════════════
    TOKENS
@@ -503,6 +504,59 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 12px; color: #ff6688;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* Markdown styles inside AI bubbles */
+.md-body { font-size: var(--msg-size,14px); line-height: 1.7; color: var(--txt); }
+.md-body p { margin: 0 0 10px; }
+.md-body p:last-child { margin-bottom: 0; }
+.md-body strong { font-weight: 700; color: var(--txt); }
+.md-body em { font-style: italic; }
+.md-body h1,.md-body h2,.md-body h3 {
+  font-weight: 700; margin: 14px 0 6px; color: var(--txt); line-height: 1.3;
+}
+.md-body h1 { font-size: 1.2em; }
+.md-body h2 { font-size: 1.1em; }
+.md-body h3 { font-size: 1em; }
+.md-body ul,.md-body ol { margin: 6px 0 10px 18px; padding: 0; }
+.md-body li { margin-bottom: 4px; }
+.md-body code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.85em;
+  background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 5px;
+  color: #e2b96a;
+}
+.md-body pre {
+  background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin: 10px 0;
+  overflow-x: auto;
+}
+.md-body pre code {
+  background: none; padding: 0; color: #a8d8a8; font-size: 0.82em;
+}
+.md-body blockquote {
+  border-left: 3px solid var(--border2); margin: 8px 0;
+  padding: 4px 12px; color: var(--muted);
+}
+.md-body hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.md-body a { color: var(--c); text-decoration: underline; }
+.md-body table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
+.md-body th,.md-body td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.md-body th { background: rgba(255,255,255,0.05); font-weight: 600; }
+
+/* AI message action buttons */
+.ai-actions {
+  display: flex; gap: 6px; margin-top: 10px; opacity: 0;
+  transition: opacity .2s;
+}
+.msg-ai:hover .ai-actions { opacity: 1; }
+.ai-act-btn {
+  padding: 4px 10px; border-radius: 7px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--muted);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all .15s; display: flex; align-items: center; gap: 5px;
+}
+.ai-act-btn:hover { background: rgba(255,255,255,0.09); color: var(--txt); border-color: var(--border2); }
+.ai-act-btn.copied { color: #34d399; border-color: #34d399; }
 
 /* Thinking dots */
 .thinking {
@@ -1748,13 +1802,83 @@ function addThinking(id,type){
   $(id).appendChild(d); scrollBot(id);
 }
 function rmThinking(id){const e=$(`td-${id}`);if(e)e.remove();}
-function addAI(id,txt,type){
-  const d=document.createElement('div'); d.className=`msg msg-ai ai-${type}`;
-  const lbl=document.createElement('div'); lbl.className='ai-lbl';
-  lbl.textContent=type==='c'?'Claude Sonnet':'GPT-5.4';
-  const cnt=document.createElement('div'); cnt.textContent=txt;
-  d.appendChild(lbl); d.appendChild(cnt); $(id).appendChild(d); scrollBot(id);
+function parseMarkdown(txt) {
+  if (typeof marked === 'undefined') return txt;
+  marked.setOptions({ breaks: true, gfm: true });
+  return marked.parse(txt);
 }
+
+function addAI(id, txt, type) {
+  const d = document.createElement('div'); d.className = `msg msg-ai ai-${type}`;
+
+  // Label
+  const lbl = document.createElement('div'); lbl.className = 'ai-lbl';
+  lbl.textContent = type==='c' ? 'Claude Sonnet' : 'GPT-5.4';
+
+  // Content — markdown rendered
+  const cnt = document.createElement('div'); cnt.className = 'md-body';
+  cnt.innerHTML = parseMarkdown(txt);
+
+  // Action buttons
+  const actions = document.createElement('div'); actions.className = 'ai-actions';
+
+  // Copy button
+  const copyBtn = document.createElement('button'); copyBtn.className = 'ai-act-btn';
+  copyBtn.innerHTML = '⎘ Copy';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(txt).then(() => {
+      copyBtn.innerHTML = '✓ Copied'; copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.innerHTML = '⎘ Copy'; copyBtn.classList.remove('copied'); }, 2000);
+    });
+  };
+
+  // Regenerate button
+  const regenBtn = document.createElement('button'); regenBtn.className = 'ai-act-btn';
+  regenBtn.innerHTML = '↺ Retry';
+  regenBtn.onclick = () => regenerate(type);
+
+  // TTS button
+  const ttsBtn = document.createElement('button'); ttsBtn.className = 'ai-act-btn';
+  ttsBtn.innerHTML = '🔊';
+  ttsBtn.title = 'Read aloud';
+  ttsBtn.onclick = () => speak(txt);
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(regenBtn);
+  actions.appendChild(ttsBtn);
+
+  d.appendChild(lbl); d.appendChild(cnt); d.appendChild(actions);
+  $(id).appendChild(d); scrollBot(id);
+}
+async function regenerate(type) {
+  if (busy) return;
+  const hist = type==='c' ? cH : gH;
+  const msgEl = type==='c' ? 'cMsgs' : 'gMsgs';
+  // Remove last assistant message from history
+  if (hist.length && hist[hist.length-1].role==='assistant') hist.pop();
+  else return;
+  // Remove last AI bubble from DOM
+  const bubbles = $(msgEl).querySelectorAll('.msg-ai');
+  if (bubbles.length) bubbles[bubbles.length-1].remove();
+
+  busy=true; $('sendBtn').disabled=true;
+  addThinking(msgEl, type);
+  setState(type==='c'?'cSt':'gSt', 'Thinking…', type==='c'?'tc':'tg');
+
+  try {
+    const txt = type==='c' ? await callC(cH) : await callG(gH);
+    rmThinking(msgEl);
+    addAI(msgEl, txt, type);
+    hist.push({role:'assistant', content:txt});
+    setState(type==='c'?'cSt':'gSt', 'Ready');
+  } catch(e) {
+    rmThinking(msgEl);
+    addErr(msgEl, e);
+    setState(type==='c'?'cSt':'gSt', 'Error');
+  }
+  await saveFB(); busy=false; $('sendBtn').disabled=false;
+}
+
 function addErr(id,msg){
   const d=document.createElement('div'); d.className='msg msg-err'; d.textContent='⚠ '+msg;
   $(id).appendChild(d); scrollBot(id);
