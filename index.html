@@ -572,7 +572,97 @@ input[type=range]::-webkit-slider-thumb {
 .tdot:nth-child(3){animation-delay:.34s}
 @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.3} 40%{transform:translateY(-8px);opacity:1} }
 
-/* ── INPUT BAR ── */
+/* Incognito */
+.incognito-btn { gap: 5px; }
+.incognito-btn.active {
+  color: #a78bfa !important;
+  background: rgba(167,139,250,0.12) !important;
+  border-color: rgba(167,139,250,0.3) !important;
+}
+.incognito-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 20px; font-size: 12px; font-weight: 600;
+  background: rgba(167,139,250,0.12); color: #a78bfa;
+  border-bottom: 1px solid rgba(167,139,250,0.2);
+  font-family: 'JetBrains Mono', monospace;
+}
+.incognito-bar svg { width: 14px; height: 14px; flex-shrink: 0; }
+.incognito-bar button {
+  margin-left: auto; padding: 3px 10px; border-radius: 6px;
+  border: 1px solid rgba(167,139,250,0.3); background: none;
+  color: #a78bfa; cursor: pointer; font-size: 11px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.incognito-bar button:hover { background: rgba(167,139,250,0.15); }
+
+/* ── CHAT HISTORY SIDEBAR ── */
+.hist-toggle-btn {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  transition: color .15s, background .15s;
+}
+.hist-toggle-btn:hover { color: var(--txt); background: rgba(255,255,255,0.07); }
+.hist-toggle-btn svg { width: 18px; height: 18px; }
+
+.hist-backdrop {
+  position: fixed; inset: 0; z-index: 299;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+}
+.hist-sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 280px; z-index: 300;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 0;
+  transform: translateX(-100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+  box-shadow: 4px 0 32px rgba(0,0,0,0.4);
+}
+.hist-sidebar.open { transform: translateX(0); }
+.hist-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 16px 12px; border-bottom: 1px solid var(--border);
+}
+.hist-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+}
+.hist-close {
+  width: 28px; height: 28px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.05); color: var(--muted); cursor: pointer;
+  font-size: 13px; transition: all .15s;
+}
+.hist-close:hover { background: rgba(255,68,102,0.15); color: #ff6688; }
+.hist-new-btn {
+  margin: 12px; padding: 10px; border-radius: 10px;
+  background: rgba(255,124,42,0.1); border: 1px solid rgba(255,124,42,0.2);
+  color: var(--c); font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font); transition: all .2s;
+}
+.hist-new-btn:hover { background: rgba(255,124,42,0.18); }
+.chat-list { flex: 1; overflow-y: auto; padding: 4px 8px 16px; display: flex; flex-direction: column; gap: 4px; }
+.chat-item {
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid transparent; transition: all .15s;
+  position: relative;
+}
+.chat-item:hover { background: rgba(255,255,255,0.05); border-color: var(--border); }
+.chat-item.active { background: rgba(255,124,42,0.08); border-color: rgba(255,124,42,0.2); }
+.chat-item-title {
+  font-size: 12px; font-weight: 500; color: var(--txt);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 20px; line-height: 1.4;
+}
+.chat-item-meta { font-size: 10px; color: var(--dim); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+.chat-item-del {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; border-radius: 5px; border: none;
+  background: none; color: var(--dim); cursor: pointer; font-size: 11px;
+  opacity: 0; transition: opacity .15s, background .15s, color .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-item:hover .chat-item-del { opacity: 1; }
+.chat-item-del:hover { background: rgba(255,68,102,0.15); color: #ff6688; }
+
+/* ── CHAT HISTORY SIDEBAR ── */
 .input-bar {
   padding: 16px 20px; flex-shrink: 0;
   border-top: 1px solid var(--border);
@@ -1084,8 +1174,22 @@ textarea::placeholder { color: var(--muted); }
 ════════════════════════════════════ -->
 <div id="app">
 
+  <!-- CHAT HISTORY SIDEBAR -->
+  <div class="hist-sidebar" id="histSidebar">
+    <div class="hist-header">
+      <span class="hist-title">Chats</span>
+      <button class="hist-close" onclick="toggleHistory()">✕</button>
+    </div>
+    <button class="hist-new-btn" onclick="newChat()">＋ New Chat</button>
+    <div class="chat-list" id="chatList"></div>
+  </div>
+  <div class="hist-backdrop" id="histBackdrop" onclick="toggleHistory()" style="display:none"></div>
+
   <div class="top">
     <div class="top-brand">
+      <button class="hist-toggle-btn" onclick="toggleHistory()" title="Chat history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div class="top-orb">D</div>
       <div class="top-name">Dual AI</div>
     </div>
@@ -1099,13 +1203,22 @@ textarea::placeholder { color: var(--muted); }
     <div class="top-right">
       <span class="ctx-pip2" id="ctxPip" style="margin-right:2px"></span>
       <button class="top-btn new" onclick="newChat()">＋ <span>New</span></button>
+      <button class="top-btn incognito-btn" id="incognitoBtn" onclick="toggleIncognito()" title="Gizli mod — kaydedilmez">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        <span>Gizli</span>
+      </button>
       <button class="top-btn save" onclick="saveChat()">↓ <span>Save</span></button>
       <button class="top-btn settings" onclick="openSettings()">⚙ <span>Personalise</span></button>
       <button class="top-btn" onclick="resetApp()" title="Change API keys" style="padding:0 12px">⚿</button>
     </div>
   </div>
 
-  <div id="syncBar">
+  <!-- Incognito banner -->
+  <div class="incognito-bar" id="incognitoBar" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    Gizli mod — bu sohbet kaydedilmiyor
+    <button onclick="toggleIncognito()">Kapat</button>
+  </div>
     <div id="sDot"></div>
     <span id="sTxt">Connecting…</span>
   </div>
@@ -1196,7 +1309,7 @@ textarea::placeholder { color: var(--muted); }
 ════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, deleteDoc, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const fb = initializeApp({
   apiKey:"AIzaSyBxyp2LcTM4WKw81mtlvN3bffwJBv9ULTg",
@@ -1207,12 +1320,41 @@ const fb = initializeApp({
   appId:"1:751675631927:web:368ecb89ba62549a3bd2b2"
 });
 const db = getFirestore(fb);
-const S='sessions/main', P='settings/masterPrompt';
+const P='settings/masterPrompt';
+const CHATS_COL = 'chats'; // collection
 
 let ck='', ok='', cH=[], gH=[], mp='', busy=false, syncing=false, unsub=null;
 let aiMode='both';
+let currentChatId = null; // active chat doc id
 
 let pendingImgs = []; // [{dataUrl, mediaType}]
+
+window.toggleHistory = () => {
+  const sidebar = $('histSidebar');
+  const backdrop = $('histBackdrop');
+  const isOpen = sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', !isOpen);
+  backdrop.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) loadChatList();
+};
+
+let incognito = false;
+window.toggleIncognito = () => {
+  incognito = !incognito;
+  $('incognitoBtn').classList.toggle('active', incognito);
+  $('incognitoBar').style.display = incognito ? 'flex' : 'none';
+  $('syncBar').style.display = incognito ? 'none' : '';
+  if (incognito) {
+    // Start fresh in memory, don't load/save Firebase
+    if (unsub) { unsub(); unsub = null; }
+    cH=[]; gH=[];
+    $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
+    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  } else {
+    // Return to normal — reload last chat
+    loadFB();
+  }
+};
 
 const $ = id => document.getElementById(id);
 
@@ -1427,35 +1569,151 @@ window.setAI = (mode) => {
 };
 
 // ══════════════════════════
-// FIREBASE
+// FIREBASE — MULTI-CHAT
 // ══════════════════════════
 function setSyncUI(state, msg) {
   $('syncBar').classList.add('on'); $('sDot').className=state; $('sTxt').textContent=msg;
   if (state==='synced') setTimeout(()=>$('syncBar').classList.remove('on'),2200);
 }
+
+function chatDoc(id) { return doc(db, CHATS_COL, id); }
+
 async function saveFB() {
+  if (incognito) return; // gizli modda kaydetme
+  if (!currentChatId) return;
   if(syncing)return; syncing=true; setSyncUI('syncing','Syncing…');
-  try { await setDoc(doc(db,S),{claudeHistory:cH,gptHistory:gH,updatedAt:Date.now()}); setSyncUI('synced','Synced ✓'); }
-  catch(e){ setSyncUI('error','Error: '+e.message); }
+  // Get first user message as title
+  const firstMsg = cH.filter(m=>!m._system&&m.role==='user')[0];
+  const title = firstMsg ? (typeof firstMsg.content==='string' ? firstMsg.content : '[image]').slice(0,60) : 'New chat';
+  try {
+    await setDoc(chatDoc(currentChatId), {
+      claudeHistory: cH, gptHistory: gH,
+      title, updatedAt: Date.now()
+    });
+    setSyncUI('synced','Synced ✓');
+    loadChatList();
+  } catch(e){ setSyncUI('error','Error: '+e.message); }
   syncing=false;
 }
+
 async function savePFB(p){ try{await setDoc(doc(db,P),{value:p,updatedAt:Date.now()});}catch{} }
+
+async function loadChatList() {
+  try {
+    const q = query(collection(db, CHATS_COL), orderBy('updatedAt','desc'));
+    const snap = await getDocs(q);
+    const list = $('chatList');
+    list.innerHTML = '';
+    snap.forEach(d => {
+      const data = d.data();
+      const item = document.createElement('div');
+      item.className = 'chat-item' + (d.id===currentChatId?' active':'');
+      item.dataset.id = d.id;
+      const date = new Date(data.updatedAt).toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+      item.innerHTML = `
+        <div class="chat-item-title">${data.title||'New chat'}</div>
+        <div class="chat-item-meta">${date}</div>
+        <button class="chat-item-del" onclick="deleteChat('${d.id}',event)" title="Delete">✕</button>`;
+      item.onclick = (e) => { if(!e.target.classList.contains('chat-item-del')) switchChat(d.id); };
+      list.appendChild(item);
+    });
+  } catch(e) { console.error('loadChatList error',e); }
+}
+
+async function switchChat(id) {
+  if (id===currentChatId) return;
+  if (unsub) { unsub(); unsub=null; }
+  currentChatId = id;
+  cH=[]; gH=[];
+  $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
+  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  setSyncUI('syncing','Loading…');
+  try {
+    const snap = await getDoc(chatDoc(id));
+    if (snap.exists()) {
+      const d = snap.data();
+      cH = d.claudeHistory||[]; gH = d.gptHistory||[];
+      if (cH.length) render();
+    }
+    setSyncUI('synced','Loaded ✓');
+  } catch(e){ setSyncUI('error','Load error'); }
+  liveChat();
+  loadChatList();
+}
+
+window.deleteChat = async (id, e) => {
+  e.stopPropagation();
+  if (!confirm('Delete this chat?')) return;
+  await deleteDoc(chatDoc(id));
+  if (id===currentChatId) {
+    currentChatId=null; cH=[]; gH=[];
+    $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
+    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  }
+  loadChatList();
+};
+
+function liveChat() {
+  if (!currentChatId) return;
+  if(unsub)unsub();
+  unsub = onSnapshot(chatDoc(currentChatId), snap => {
+    if(!snap.exists()||busy) return;
+    const d = snap.data();
+    if(d.updatedAt>(cH._ts||0)){
+      cH=d.claudeHistory||[]; gH=d.gptHistory||[];
+      cH._ts=d.updatedAt; render();
+      setSyncUI('synced','Updated from another device ✓');
+    }
+  });
+}
+
 async function loadFB() {
   setSyncUI('syncing','Loading…');
   try {
     const ps=await getDoc(doc(db,P)); if(ps.exists()){mp=ps.data().value||'';updPip();}
-    const ss=await getDoc(doc(db,S)); if(ss.exists()){const d=ss.data();cH=d.claudeHistory||[];gH=d.gptHistory||[];if(cH.length)render();}
-    setSyncUI('synced','Loaded ✓'); live();
-  } catch{ setSyncUI('error','Load error'); }
+    // Load most recent chat
+    const q = query(collection(db, CHATS_COL), orderBy('updatedAt','desc'));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const latest = snap.docs[0];
+      currentChatId = latest.id;
+      const d = latest.data();
+      cH=d.claudeHistory||[]; gH=d.gptHistory||[];
+      if(cH.length) render();
+    } else {
+      // No chats yet — create first one
+      currentChatId = 'chat_'+Date.now();
+    }
+    setSyncUI('synced','Loaded ✓');
+    loadChatList();
+    liveChat();
+  } catch(e){ setSyncUI('error','Load error'); console.error(e); }
 }
-function live(){
-  if(unsub)unsub();
-  unsub=onSnapshot(doc(db,S),snap=>{
-    if(!snap.exists()||busy)return;
-    const d=snap.data();
-    if(d.updatedAt>(cH._ts||0)){cH=d.claudeHistory||[];gH=d.gptHistory||[];cH._ts=d.updatedAt;render();setSyncUI('synced','Updated from another device ✓');}
-  });
-}
+
+window.newChat = async () => {
+  currentChatId = 'chat_'+Date.now();
+  cH=[]; gH=[];
+  if(unsub){unsub();unsub=null;}
+  $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
+  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  loadChatList();
+  $('prompt').focus();
+};
+window.saveChat = ()=>{
+  if(!cH.length){alert('No conversation.');return;}
+  let t='DUAL AI — Export\n'+new Date().toLocaleString()+'\n'+'─'.repeat(48)+'\n\n';
+  const cm=cH.filter(m=>!m._system),gm=gH.filter(m=>!m._system);
+  for(let i=0;i<cm.length;i++){
+    if(cm[i].role==='user'){
+      t+=`YOU:\n${typeof cm[i].content==='string'?cm[i].content:'[image]'}\n\n`;
+      if(cm[i+1]?.role==='assistant') t+=`CLAUDE:\n${cm[i+1].content}\n\n`;
+      if(gm[i+1]?.role==='assistant') t+=`GPT-5.4:\n${gm[i+1].content}\n\n`;
+      t+='─'.repeat(40)+'\n\n'; i++;
+    }
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'})); a.download=`dual-ai-${Date.now()}.txt`; a.click();
+};
 
 // ══════════════════════════
 // RENDER HISTORY
@@ -1494,28 +1752,6 @@ window.startApp = async()=>{
 };
 window.resetApp = ()=>{
   if(unsub)unsub(); $('setup').style.display='flex'; $('app').style.display='none';
-};
-window.newChat = async()=>{
-  if(!confirm('Clear chat on all devices?'))return;
-  cH=[];gH=[];
-  $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
-  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
-  await saveFB();
-};
-window.saveChat = ()=>{
-  if(!cH.length){alert('No conversation.');return;}
-  let t='DUAL AI — Export\n'+new Date().toLocaleString()+'\n'+'─'.repeat(48)+'\n\n';
-  const cm=cH.filter(m=>!m._system),gm=gH.filter(m=>!m._system);
-  for(let i=0;i<cm.length;i++){
-    if(cm[i].role==='user'){
-      t+=`YOU:\n${cm[i].content}\n\n`;
-      if(cm[i+1]?.role==='assistant') t+=`CLAUDE:\n${cm[i+1].content}\n\n`;
-      if(gm[i+1]?.role==='assistant') t+=`GPT-5.4:\n${gm[i+1].content}\n\n`;
-      t+='─'.repeat(40)+'\n\n'; i++;
-    }
-  }
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'})); a.download=`dual-ai-${Date.now()}.txt`; a.click();
 };
 
 // ══════════════════════════
