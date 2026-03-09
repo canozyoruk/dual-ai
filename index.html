@@ -1572,8 +1572,9 @@ window.setAI = (mode) => {
 // FIREBASE — MULTI-CHAT
 // ══════════════════════════
 function setSyncUI(state, msg) {
-  $('syncBar').classList.add('on'); $('sDot').className=state; $('sTxt').textContent=msg;
-  if (state==='synced') setTimeout(()=>$('syncBar').classList.remove('on'),2200);
+  const bar = $('syncBar'); if(!bar) return;
+  bar.classList.add('on'); $('sDot').className=state; $('sTxt').textContent=msg;
+  if (state==='synced') setTimeout(()=>bar.classList.remove('on'),2200);
 }
 
 function chatDoc(id) { return doc(db, CHATS_COL, id); }
