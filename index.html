@@ -878,16 +878,15 @@ textarea::placeholder { color: var(--muted); }
   .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
   .mode-pills { display: none; }
   .settings-panel { width: 100%; }
-  .top { padding: 0 8px; gap: 4px; height: 52px; }
+  .top { padding: 0 8px; gap: 4px; height: 52px; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; }
+  .top::-webkit-scrollbar { display: none; }
   .top-name { display: none; }
+  .top-brand { flex-shrink: 0; }
+  .top-right { flex-shrink: 0; gap: 4px; margin-left: auto; }
   .top-orb { width: 28px; height: 28px; font-size: 13px; }
-  .top-btn { padding: 0 8px; height: 32px; font-size: 11px; border-radius: 8px; gap: 4px; }
-  .top-btn span { display: none; }
-  .top-right { gap: 3px; }
-  .hist-toggle-btn { width: 30px; height: 30px; }
+  .top-btn { padding: 0 10px; height: 34px; font-size: 12px; border-radius: 8px; flex-shrink: 0; }
+  .hist-toggle-btn { width: 30px; height: 30px; flex-shrink: 0; }
   .input-bar { padding: 10px 12px; gap: 8px; }
-  .top-btn.save { display: none; }
-  .top-btn:last-child { display: none; } /* reset/key button */
   textarea { font-size: 16px; }
 }
 </style>
@@ -1733,15 +1732,20 @@ window.saveChat = ()=>{
 function render(){
   $('cMsgs').innerHTML=''; $('gMsgs').innerHTML='';
   const ch=cH.filter(m=>!m._system), gh=gH.filter(m=>!m._system);
+  let gi=0;
   for(let i=0;i<ch.length;i++){
     if(ch[i].role==='user'){
       const txt = typeof ch[i].content==='string' ? ch[i].content : (ch[i].content||'');
       const thumbs = ch[i]._thumbs || [];
       addYou('cMsgs', txt, thumbs.map(t=>({dataUrl:t})));
-      addYou('gMsgs', txt, thumbs.map(t=>({dataUrl:t})));
+      // find matching user in gH
+      while(gi<gh.length && gh[gi].role!=='user') gi++;
+      if(gi<gh.length) addYou('gMsgs', typeof gh[gi].content==='string'?gh[gi].content:txt, thumbs.map(t=>({dataUrl:t})));
       i++;
       if(ch[i]?.role==='assistant') addAI('cMsgs',ch[i].content,'c');
-      if(gh[i]?.role==='assistant') addAI('gMsgs',gh[i].content,'g');
+      gi++;
+      if(gi<gh.length && gh[gi]?.role==='assistant') addAI('gMsgs',gh[gi].content,'g');
+      gi++;
     }
   }
 }
