@@ -878,13 +878,17 @@ textarea::placeholder { color: var(--muted); }
   .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
   .mode-pills { display: none; }
   .settings-panel { width: 100%; }
-  .top { padding: 0 10px; gap: 6px; }
+  .top { padding: 0 8px; gap: 4px; height: 52px; }
   .top-name { display: none; }
-  .top-btn { padding: 0 10px; height: 36px; font-size: 12px; }
+  .top-orb { width: 28px; height: 28px; font-size: 13px; }
+  .top-btn { padding: 0 8px; height: 32px; font-size: 11px; border-radius: 8px; gap: 4px; }
   .top-btn span { display: none; }
-  .top-right { gap: 4px; }
+  .top-right { gap: 3px; }
+  .hist-toggle-btn { width: 30px; height: 30px; }
   .input-bar { padding: 10px 12px; gap: 8px; }
-  textarea { font-size: 16px; } /* iOS zoom önleme */
+  .top-btn.save { display: none; }
+  .top-btn:last-child { display: none; } /* reset/key button */
+  textarea { font-size: 16px; }
 }
 </style>
 </head>
