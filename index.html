@@ -685,7 +685,7 @@ textarea {
   width: 100%; background: none; border: none; outline: none;
   color: var(--txt); font-family: var(--font);
   font-size: 14px; font-weight: 500; resize: none;
-  padding: 12px 14px; max-height: 130px; line-height: 1.55;
+  padding: 12px 14px; min-height: 44px; max-height: 130px; line-height: 1.55;
   overflow-y: auto;
 }
 textarea::placeholder { color: var(--muted); }
@@ -888,6 +888,15 @@ textarea::placeholder { color: var(--muted); }
   .hist-toggle-btn { width: 30px; height: 30px; flex-shrink: 0; }
   .input-bar { padding: 10px 12px; gap: 8px; }
   textarea { font-size: 16px; }
+}
+
+/* Z Fold 5 dış ekran (~373px) */
+@media (max-width: 400px) {
+  .top-btn { padding: 0 7px; height: 30px; font-size: 11px; }
+  .top-btn span { display: none; }
+  .top-orb { width: 24px; height: 24px; font-size: 11px; }
+  .hist-toggle-btn { width: 26px; height: 26px; }
+  .top-right { gap: 3px; }
 }
 </style>
 </head>
@@ -2031,7 +2040,10 @@ $('voiceOrb')?.addEventListener('click', async () => {
 // UI HELPERS
 // ══════════════════════════
 window.handleKey  = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}};
-window.autoResize = el=>{el.style.height='auto';el.style.height=Math.min(el.scrollHeight,130)+'px';};
+window.autoResize = el => {
+  el.style.height = '44px'; // reset to min
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+};
 
 const clrEmpty = id=>{const e=$(id).querySelector('.empty-st');if(e)e.remove();};
 const scrollBot = id=>{const el=$(id);el.scrollTop=el.scrollHeight;};
