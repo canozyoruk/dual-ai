@@ -686,7 +686,8 @@ textarea {
   color: var(--txt); font-family: var(--font);
   font-size: 14px; font-weight: 500; resize: none;
   padding: 12px 14px; min-height: 44px; max-height: 130px; line-height: 1.55;
-  overflow-y: auto;
+  overflow-y: auto; box-sizing: border-box;
+  display: block; /* prevents inline baseline issues */
 }
 textarea::placeholder { color: var(--muted); }
 
@@ -1745,26 +1746,24 @@ window.saveChat = ()=>{
 // ══════════════════════════
 // RENDER HISTORY
 // ══════════════════════════
-function render(){
-  $('cMsgs').innerHTML=''; $('gMsgs').innerHTML='';
-  const ch=cH.filter(m=>!m._system);
-  const gh=gH.filter(m=>!m._system);
-  
-  // Her ikisi de user/assistant çiftleri halinde gelir
-  // ch ve gh paralel array — aynı indekste aynı mesaj
-  const len = Math.max(ch.length, gh.length);
-  for(let i=0; i<len; i++){
-    const cm = ch[i], gm = gh[i];
-    if(cm?.role==='user' || gm?.role==='user'){
-      const txt = typeof (cm||gm).content==='string' ? (cm||gm).content : '[image]';
-      const thumbs = ((cm||gm)._thumbs || []);
-      addYou('cMsgs', txt, thumbs.map(t=>({dataUrl:t})));
-      addYou('gMsgs', txt, thumbs.map(t=>({dataUrl:t})));
-      i++;
-      const ca = ch[i], ga = gh[i];
-      if(ca?.role==='assistant') addAI('cMsgs', ca.content, 'c');
-      if(ga?.role==='assistant') addAI('gMsgs', ga.content, 'g');
+function renderPanel(panelId, history, aiType){
+  $(panelId).innerHTML='';
+  const msgs = history.filter(m=>!m._system);
+  for(let i=0;i<msgs.length;i++){
+    const m = msgs[i];
+    if(m.role==='user'){
+      const txt = typeof m.content==='string' ? m.content : '[image]';
+      const thumbs = (m._thumbs||[]).map(t=>({dataUrl:t}));
+      addYou(panelId, txt, thumbs);
+    } else if(m.role==='assistant'){
+      addAI(panelId, m.content, aiType);
     }
+  }
+}
+function render(){
+  renderPanel('cMsgs', cH, 'c');
+  renderPanel('gMsgs', gH, 'g');
+}
   }
 }
 
@@ -2050,8 +2049,9 @@ $('voiceOrb')?.addEventListener('click', async () => {
 // ══════════════════════════
 window.handleKey  = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}};
 window.autoResize = el => {
-  el.style.height = '44px'; // reset to min
-  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+  el.style.height = 'auto';
+  const newH = Math.min(el.scrollHeight, 130);
+  el.style.height = newH + 'px';
 };
 
 const clrEmpty = id=>{const e=$(id).querySelector('.empty-st');if(e)e.remove();};
