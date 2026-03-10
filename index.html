@@ -872,7 +872,7 @@ textarea::placeholder { color: var(--muted); }
 .swatch-custom span { pointer-events: none; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .panels { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
   .panels.solo { grid-template-rows: 1fr; }
   .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
@@ -1744,21 +1744,23 @@ window.saveChat = ()=>{
 // ══════════════════════════
 function render(){
   $('cMsgs').innerHTML=''; $('gMsgs').innerHTML='';
-  const ch=cH.filter(m=>!m._system), gh=gH.filter(m=>!m._system);
-  let gi=0;
-  for(let i=0;i<ch.length;i++){
-    if(ch[i].role==='user'){
-      const txt = typeof ch[i].content==='string' ? ch[i].content : (ch[i].content||'');
-      const thumbs = ch[i]._thumbs || [];
+  const ch=cH.filter(m=>!m._system);
+  const gh=gH.filter(m=>!m._system);
+  
+  // Her ikisi de user/assistant çiftleri halinde gelir
+  // ch ve gh paralel array — aynı indekste aynı mesaj
+  const len = Math.max(ch.length, gh.length);
+  for(let i=0; i<len; i++){
+    const cm = ch[i], gm = gh[i];
+    if(cm?.role==='user' || gm?.role==='user'){
+      const txt = typeof (cm||gm).content==='string' ? (cm||gm).content : '[image]';
+      const thumbs = ((cm||gm)._thumbs || []);
       addYou('cMsgs', txt, thumbs.map(t=>({dataUrl:t})));
-      // find matching user in gH
-      while(gi<gh.length && gh[gi].role!=='user') gi++;
-      if(gi<gh.length) addYou('gMsgs', typeof gh[gi].content==='string'?gh[gi].content:txt, thumbs.map(t=>({dataUrl:t})));
+      addYou('gMsgs', txt, thumbs.map(t=>({dataUrl:t})));
       i++;
-      if(ch[i]?.role==='assistant') addAI('cMsgs',ch[i].content,'c');
-      gi++;
-      if(gi<gh.length && gh[gi]?.role==='assistant') addAI('gMsgs',gh[gi].content,'g');
-      gi++;
+      const ca = ch[i], ga = gh[i];
+      if(ca?.role==='assistant') addAI('cMsgs', ca.content, 'c');
+      if(ga?.role==='assistant') addAI('gMsgs', ga.content, 'g');
     }
   }
 }
