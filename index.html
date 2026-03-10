@@ -75,15 +75,15 @@ body::before {
 ══════════════════════════════════════════════════ */
 #setup {
   position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: flex-start; justify-content: center;
   padding: 20px;
-  background: var(--bg);
-}
+  background: var(--bg); overflow-y: auto;
 
 .setup-wrap {
   width: 100%; max-width: 480px;
-  position: relative; z-index: 1;
-}
+  width: 100%; max-width: 480px;
+  position: relative; z-index: 1; margin: auto; padding: 20px 0;
 
 .setup-header {
   text-align: center; margin-bottom: 36px;
@@ -1763,8 +1763,6 @@ function renderPanel(panelId, history, aiType){
 function render(){
   renderPanel('cMsgs', cH, 'c');
   renderPanel('gMsgs', gH, 'g');
-}
-  }
 }
 
 // ══════════════════════════
