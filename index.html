@@ -686,6 +686,7 @@ textarea {
   color: var(--txt); font-family: var(--font);
   font-size: 14px; font-weight: 500; resize: none;
   padding: 12px 14px; max-height: 130px; line-height: 1.55;
+  overflow-y: auto;
 }
 textarea::placeholder { color: var(--muted); }
 
@@ -877,9 +878,13 @@ textarea::placeholder { color: var(--muted); }
   .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
   .mode-pills { display: none; }
   .settings-panel { width: 100%; }
-  .top { padding: 0 14px; }
-  .input-bar { padding: 12px 14px; }
+  .top { padding: 0 10px; gap: 6px; }
+  .top-name { display: none; }
+  .top-btn { padding: 0 10px; height: 36px; font-size: 12px; }
   .top-btn span { display: none; }
+  .top-right { gap: 4px; }
+  .input-bar { padding: 10px 12px; gap: 8px; }
+  textarea { font-size: 16px; } /* iOS zoom önleme */
 }
 </style>
 </head>
@@ -895,7 +900,7 @@ textarea::placeholder { color: var(--muted); }
         <div class="logo-orb">D</div>
       </div>
       <div class="setup-title">Dual AI</div>
-      <div class="setup-sub">Claude × GPT-5.4 — two minds, one question</div>
+      <div class="setup-sub">Claude × GPT-4o — two minds, one question</div>
     </div>
 
     <div class="glass-card">
@@ -1036,7 +1041,7 @@ textarea::placeholder { color: var(--muted); }
           <div class="color-row">
             <div class="color-row-label">
               <span class="color-preview" id="prevGpt" style="background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.3)"></span>
-              GPT-5.4
+              GPT-4o
             </div>
             <div class="color-swatches" id="swatchGpt">
               <button class="swatch active" style="background:rgba(0,212,255,0.1)" onclick="setBubbleColor('gpt','rgba(0,212,255,0.1)',this)" title="Cyan (default)"></button>
@@ -1247,13 +1252,13 @@ textarea::placeholder { color: var(--muted); }
       <div class="panel-hd panel-hd-g">
         <div class="ph-glow" style="background:var(--g);box-shadow:0 0 10px var(--g)"></div>
         <span class="ph-label" style="color:var(--g)">GPT</span>
-        <span class="ph-model-tag">5.4</span>
+        <span class="ph-model-tag">4o</span>
         <span class="ph-state" id="gSt">Ready</span>
       </div>
       <div class="msgs" id="gMsgs">
         <div class="empty-st">
           <div class="es-orb">◑</div>
-          <div class="es-lbl">GPT-5.4 is ready</div>
+          <div class="es-lbl">GPT-4o is ready</div>
         </div>
       </div>
     </div>
@@ -1351,7 +1356,7 @@ window.toggleIncognito = () => {
     if (unsub) { unsub(); unsub = null; }
     cH=[]; gH=[];
     $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
-    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-4o is ready</div></div>';
   } else {
     // Return to normal — reload last chat
     loadFB();
@@ -1567,7 +1572,7 @@ window.setAI = (mode) => {
   $('panelC').classList.toggle('hidden', mode==='g');
   $('panelG').classList.toggle('hidden', mode==='c');
   $('panels').classList.toggle('solo', mode!=='both');
-  $('prompt').placeholder = mode==='both'?'Ask both AIs anything…':mode==='c'?'Ask Claude anything…':'Ask GPT-5.4 anything…';
+  $('prompt').placeholder = mode==='both'?'Ask both AIs anything…':mode==='c'?'Ask Claude anything…':'Ask GPT-4o anything…';
 };
 
 // ══════════════════════════
@@ -1629,7 +1634,7 @@ async function switchChat(id) {
   currentChatId = id;
   cH=[]; gH=[];
   $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
-  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-4o is ready</div></div>';
   setSyncUI('syncing','Loading…');
   try {
     const snap = await getDoc(chatDoc(id));
@@ -1651,7 +1656,7 @@ window.deleteChat = async (id, e) => {
   if (id===currentChatId) {
     currentChatId=null; cH=[]; gH=[];
     $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
-    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+    $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-4o is ready</div></div>';
   }
   loadChatList();
 };
@@ -1698,7 +1703,7 @@ window.newChat = async () => {
   cH=[]; gH=[];
   if(unsub){unsub();unsub=null;}
   $('cMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◐</div><div class="es-lbl">Claude is ready</div></div>';
-  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-5.4 is ready</div></div>';
+  $('gMsgs').innerHTML='<div class="empty-st"><div class="es-orb">◑</div><div class="es-lbl">GPT-4o is ready</div></div>';
   loadChatList();
   $('prompt').focus();
 };
@@ -1710,7 +1715,7 @@ window.saveChat = ()=>{
     if(cm[i].role==='user'){
       t+=`YOU:\n${typeof cm[i].content==='string'?cm[i].content:'[image]'}\n\n`;
       if(cm[i+1]?.role==='assistant') t+=`CLAUDE:\n${cm[i+1].content}\n\n`;
-      if(gm[i+1]?.role==='assistant') t+=`GPT-5.4:\n${gm[i+1].content}\n\n`;
+      if(gm[i+1]?.role==='assistant') t+=`GPT-4o:\n${gm[i+1].content}\n\n`;
       t+='─'.repeat(40)+'\n\n'; i++;
     }
   }
@@ -2055,7 +2060,7 @@ function addAI(id, txt, type) {
 
   // Label
   const lbl = document.createElement('div'); lbl.className = 'ai-lbl';
-  lbl.textContent = type==='c' ? 'Claude Sonnet' : 'GPT-5.4';
+  lbl.textContent = type==='c' ? 'Claude Sonnet' : 'GPT-4o';
 
   // Content — markdown rendered
   const cnt = document.createElement('div'); cnt.className = 'md-body';
@@ -2241,7 +2246,7 @@ async function callG(h){
   const r=await fetch('https://api.openai.com/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${ok}`},
-    body:JSON.stringify({model:'gpt-5.4',messages:msgs,max_completion_tokens:1024})
+    body:JSON.stringify({model:'gpt-4o',messages:msgs,max_completion_tokens:1024})
   });
   if(!r.ok){const e=await r.json();throw e.error?.message||'GPT error';}
   return (await r.json()).choices[0].message.content;
