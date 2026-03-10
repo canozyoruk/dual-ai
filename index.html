@@ -1673,15 +1673,18 @@ window.deleteChat = async (id, e) => {
   loadChatList();
 };
 
+let lastSyncTs = 0;
+
 function liveChat() {
   if (!currentChatId) return;
   if(unsub)unsub();
   unsub = onSnapshot(chatDoc(currentChatId), snap => {
     if(!snap.exists()||busy) return;
     const d = snap.data();
-    if(d.updatedAt>(cH._ts||0)){
+    if(d.updatedAt > lastSyncTs){
+      lastSyncTs = d.updatedAt;
       cH=d.claudeHistory||[]; gH=d.gptHistory||[];
-      cH._ts=d.updatedAt; render();
+      render();
       setSyncUI('synced','Updated from another device ✓');
     }
   });
@@ -1699,6 +1702,7 @@ async function loadFB() {
       currentChatId = latest.id;
       const d = latest.data();
       cH=d.claudeHistory||[]; gH=d.gptHistory||[];
+      lastSyncTs = d.updatedAt || 0;
       if(cH.length) render();
     } else {
       // No chats yet — create first one
