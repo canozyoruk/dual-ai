@@ -1342,7 +1342,7 @@ const db = getFirestore(fb);
 const P='settings/masterPrompt';
 const CHATS_COL = 'chats'; // collection
 
-let ck='', ok='', cH=[], gH=[], mp='', busy=false, syncing=false, unsub=null;
+let ck='', ok='', cH=[], gH=[], mp='', busy=false, syncing=false, pendingSave=false, unsub=null;
 let aiMode='both';
 let currentChatId = null; // active chat doc id
 
@@ -1601,19 +1601,22 @@ function chatDoc(id) { return doc(db, CHATS_COL, id); }
 async function saveFB() {
   if (incognito) return; // gizli modda kaydetme
   if (!currentChatId) return;
-  if(syncing)return; syncing=true; setSyncUI('syncing','Syncing…');
+  if(syncing){ pendingSave=true; return; } syncing=true; pendingSave=false; setSyncUI('syncing','Syncing…');
   // Get first user message as title
   const firstMsg = cH.filter(m=>!m._system&&m.role==='user')[0];
   const title = firstMsg ? (typeof firstMsg.content==='string' ? firstMsg.content : '[image]').slice(0,60) : 'New chat';
+  const now = Date.now();
   try {
     await setDoc(chatDoc(currentChatId), {
       claudeHistory: cH, gptHistory: gH,
-      title, updatedAt: Date.now()
+      title, updatedAt: now
     });
+    lastSyncTs = now; // prevent onSnapshot from overwriting our data
     setSyncUI('synced','Synced ✓');
     loadChatList();
   } catch(e){ setSyncUI('error','Error: '+e.message); }
   syncing=false;
+  if(pendingSave) saveFB(); // retry if a save was queued
 }
 
 async function savePFB(p){ try{await setDoc(doc(db,P),{value:p,updatedAt:Date.now()});}catch{} }
