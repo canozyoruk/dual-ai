@@ -898,6 +898,8 @@ textarea::placeholder { color: var(--muted); }
   .top-orb { width: 24px; height: 24px; font-size: 11px; }
   .hist-toggle-btn { width: 26px; height: 26px; }
   .top-right { gap: 3px; }
+  textarea { max-height: 80px; overflow-y: auto; }
+  .input-bar { padding: 8px 10px; }
 }
 </style>
 </head>
@@ -2048,8 +2050,8 @@ $('voiceOrb')?.addEventListener('click', async () => {
 window.handleKey  = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}};
 window.autoResize = el => {
   el.style.height = 'auto';
-  const newH = Math.min(el.scrollHeight, 130);
-  el.style.height = newH + 'px';
+  const maxH = window.innerWidth <= 400 ? 80 : 130;
+  el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
 };
 
 const clrEmpty = id=>{const e=$(id).querySelector('.empty-st');if(e)e.remove();};
