@@ -668,6 +668,8 @@ input[type=range]::-webkit-slider-thumb {
   border-top: 1px solid var(--border);
   background: rgba(7,7,15,0.85); backdrop-filter: blur(20px);
   display: flex; gap: 12px; align-items: flex-end;
+  /* Mobilde klavye + flex-end sorunu: sabit pozisyon */
+  position: sticky; bottom: 0; left: 0; right: 0;
 }
 
 .input-shell {
@@ -687,7 +689,8 @@ textarea {
   font-size: 14px; font-weight: 500; resize: none;
   padding: 12px 14px; min-height: 44px; max-height: 130px; line-height: 1.55;
   overflow-y: auto; box-sizing: border-box;
-  display: block; /* prevents inline baseline issues */
+  display: block;
+  height: 44px; /* explicit start height */
 }
 textarea::placeholder { color: var(--muted); }
 
@@ -887,8 +890,17 @@ textarea::placeholder { color: var(--muted); }
   .top-orb { width: 28px; height: 28px; font-size: 13px; }
   .top-btn { padding: 0 10px; height: 34px; font-size: 12px; border-radius: 8px; flex-shrink: 0; }
   .hist-toggle-btn { width: 30px; height: 30px; flex-shrink: 0; }
-  .input-bar { padding: 10px 12px; gap: 8px; }
-  textarea { font-size: 16px; }
+  /* Input bar: fixed to bottom so it never grows upward */
+  .input-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 8px 10px; gap: 6px;
+    z-index: 50;
+  }
+  /* Compensate panels for fixed input bar height */
+  #app { padding-bottom: 72px; }
+  textarea { font-size: 16px; min-height: 40px; }
+  .send-btn { width: 44px; height: 44px; border-radius: 12px; }
+  .voice-mode-btn { height: 44px; padding: 0 12px; }
 }
 
 /* Z Fold 5 dış ekran (~373px) */
@@ -2049,9 +2061,10 @@ $('voiceOrb')?.addEventListener('click', async () => {
 // ══════════════════════════
 window.handleKey  = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}};
 window.autoResize = el => {
-  el.style.height = 'auto';
+  el.style.height = "44px"; // reset to base
   const maxH = window.innerWidth <= 400 ? 80 : 130;
-  el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+  const sh = el.scrollHeight;
+  el.style.height = Math.min(sh, maxH) + "px";
 };
 
 const clrEmpty = id=>{const e=$(id).querySelector('.empty-st');if(e)e.remove();};
