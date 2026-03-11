@@ -2283,29 +2283,28 @@ window.sendMessage=sendMessage;
 // API
 // ══════════════════════════
 async function callC(h){
-  const msgs = h.map(({role, content, _cContent, _system}) => {
-    if (_system) return {role, content: typeof content==='string' ? content : 'Understood.'};
-    // Image message this session — use full content array
+  const msgs = h.filter(m=>!m._system).map(({role, content, _cContent}) => {
     if (_cContent) return {role, content: _cContent};
-    // Image from previous session (no full data) — send text only
     if (Array.isArray(content)) return {role, content: '[image shared earlier]'};
     return {role, content: content || '[image]'};
   });
+  const body = {model:'claude-sonnet-4-20250514',max_tokens:1024,messages:msgs};
+  if(mp) body.system = mp;
   const r=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':ck,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1024,messages:msgs})
+    body:JSON.stringify(body)
   });
   if(!r.ok){const e=await r.json();throw e.error?.message||'Claude error';}
   return (await r.json()).content[0].text;
 }
 async function callG(h){
-  const msgs = h.map(({role, content, _gContent, _system}) => {
-    if (_system) return {role, content: typeof content==='string' ? content : 'Understood.'};
+  const msgs = h.filter(m=>!m._system).map(({role, content, _gContent}) => {
     if (_gContent) return {role, content: _gContent};
     if (Array.isArray(content)) return {role, content: '[image shared earlier]'};
     return {role, content: content || '[image]'};
   });
+  if(mp) msgs.unshift({role:'system', content: mp});
   const r=await fetch('https://api.openai.com/v1/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${ok}`},
