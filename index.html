@@ -876,6 +876,8 @@ textarea::placeholder { color: var(--muted); }
 .swatch-custom span { pointer-events: none; }
 
 /* ── RESPONSIVE ── */
+/* Mobile button row — hidden on desktop */
+.mob-btn-row { display: none; }
 @media (max-width: 900px) {
   .panels { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
   .panels.solo { grid-template-rows: 1fr; }
@@ -890,17 +892,24 @@ textarea::placeholder { color: var(--muted); }
   .top-orb { width: 28px; height: 28px; font-size: 13px; }
   .top-btn { padding: 0 10px; height: 34px; font-size: 12px; border-radius: 8px; flex-shrink: 0; }
   .hist-toggle-btn { width: 30px; height: 30px; flex-shrink: 0; }
-  /* Input bar: fixed to bottom so it never grows upward */
+  /* Input bar: fixed to bottom */
   .input-bar {
     position: fixed; bottom: 0; left: 0; right: 0;
-    padding: 8px 10px; gap: 6px;
+    padding: 8px 10px; gap: 0;
     z-index: 50;
+    flex-direction: column; align-items: stretch;
   }
-  /* Compensate panels for fixed input bar height */
-  #app { padding-bottom: 72px; }
+  /* input-shell takes full width, send+voice row below */
+  .input-shell { width: 100%; }
+  .mob-btn-row {
+    display: flex; justify-content: flex-end;
+    gap: 6px; padding: 6px 2px 2px;
+  }
+  /* Hide send/voice from normal flow on mobile */
+  #sendBtn, #voiceModeBtn { display: none; }
+  /* Compensate panels for fixed input bar */
+  #app { padding-bottom: 130px; }
   textarea { font-size: 16px; min-height: 40px; }
-  .send-btn { width: 44px; height: 44px; border-radius: 12px; }
-  .voice-mode-btn { height: 44px; padding: 0 12px; }
 }
 
 /* Z Fold 5 dış ekran (~373px) */
@@ -1311,14 +1320,24 @@ textarea::placeholder { color: var(--muted); }
         </button>
       </div>
     </div>
+    <!-- Desktop: send + voice beside textarea -->
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
     </button>
-    <!-- 🔊 voice mode button -->
     <button class="voice-mode-btn" id="voiceModeBtn" onclick="toggleVoiceMode()" title="Voice conversation mode">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>
       <span>Voice</span>
     </button>
+    <!-- Mobile: send + voice below textarea -->
+    <div class="mob-btn-row" id="mobBtnRow">
+      <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+      <button class="voice-mode-btn" id="voiceModeBtnMob" onclick="toggleVoiceMode()" title="Voice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><path d="M12 19v4"/><path d="M8 23h8"/></svg>
+        <span>Voice</span>
+      </button>
+    </div>
   </div>
 
   <!-- Voice conversation overlay -->
@@ -1986,6 +2005,7 @@ function startVoiceMode() {
   voiceMode = true;
   $('voiceOverlay').style.display = 'flex';
   $('voiceModeBtn').classList.add('active');
+  if($('voiceModeBtnMob')) $('voiceModeBtnMob').classList.add('active');
   setVoiceStatus('Tap the orb to speak', '');
 }
 
@@ -1996,6 +2016,7 @@ window.endVoiceMode = () => {
   if (currentAudio) { currentAudio.pause(); currentAudio=null; }
   $('voiceOverlay').style.display = 'none';
   $('voiceModeBtn').classList.remove('active');
+  if($('voiceModeBtnMob')) $('voiceModeBtnMob').classList.remove('active');
   $('voiceOrb').classList.remove('listening','speaking');
 };
 
